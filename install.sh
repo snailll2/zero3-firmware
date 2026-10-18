@@ -106,7 +106,11 @@ for p in $(ls /proc 2>/dev/null | grep -E '^[0-9]+$'); do
 done
 sleep 2
 
-echo "[4/6] 替换固件二进制..."
+echo "[3.5/6] 固化开机自启(接管脚本 → /data/bin,Sinit 钩子开机执行)..."
+mkdir -p /data/bin
+if [ -f /data/bin/start_app.sh ]; then
+    cp -f /data/bin/start_app.sh /data/bin/start_app.sh.bak 2>/dev/null || true
+fi
 tar -zxvf "$LOCAL_TAR" -C /data > /tmp/install_tar.log 2>&1
 if [ ! -x /data/nx5gui ]; then
     echo "[-] 解包断言失败(nx5gui 缺失),中止(旧固件仍在)..."
@@ -120,6 +124,12 @@ if [ -d "$BACKUP_DIR" ]; then
     rm -rf "$BACKUP_DIR"
 fi
 mv -f /data/nx5gui "$TARGET_BIN" && chmod +x "$TARGET_BIN" && sync
+# 接管脚本落位(幂等;已有 start_app.sh.bak 时不覆盖用户备份)
+if [ -f /data/start_app.sh ]; then
+    cp -f /data/start_app.sh /data/bin/start_app.sh && chmod +x /data/bin/start_app.sh
+    [ -f /data/bin/data_app.sh ] || { printf '# dummy: Sinit 检查 data_app.sh 存在但运行 start_app.sh\n' > /data/bin/data_app.sh; chmod +x /data/bin/data_app.sh; }
+    rm -f /data/start_app.sh
+fi
 rm -f "$LOCAL_TAR"
 
 # curl 持久化(后续 OTA 直连快速通道)
