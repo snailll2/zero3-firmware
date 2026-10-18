@@ -72,10 +72,18 @@ else
 fi
 
 # ---------------------------------------------------------------- 4. 下载 release 包(先验包再动系统)
-echo "[2/6] 下载最新 release 包..."
+echo "[2/6] 检查 release 包..."
 LOCAL_TAR="/tmp/$TAR_NAME"
 DOWNLOAD_OK=0
-for U in $URL_LIST; do
+# 离线口:PC 下载 tar.gz 推到设备 /tmp/$TAR_NAME 后再跑本脚本,直接跳过下载
+if [ -s "$LOCAL_TAR" ] && tar -tzf "$LOCAL_TAR" >/dev/null 2>&1; then
+    SZ=$(wc -c < "$LOCAL_TAR")
+    if [ "$SZ" -gt 2000000 ]; then
+        DOWNLOAD_OK=1
+        echo "[+] 使用已存在的 /tmp/$TAR_NAME ($SZ bytes,离线模式)"
+    fi
+fi
+[ "$DOWNLOAD_OK" -eq 1 ] || for U in $URL_LIST; do
     echo "[*] 尝试源: $U"
     rm -f "$LOCAL_TAR"
     if $CURL_EXEC -s -k -L --connect-timeout 10 -m 300 -o "$LOCAL_TAR" "$U" && [ -s "$LOCAL_TAR" ]; then
