@@ -19,36 +19,27 @@ telnet/SSH 进面板后（root / 123456），**整段粘贴**以下引导脚本�
 ```sh
 cd /tmp
 C=""
-for p in /data/nx5_conf/intercom/curl /data/curl /tmp/curl /usr/bin/curl; do
+for p in /data/nx5_conf/intercom/curl /data/scripts/curl /tmp/curl /usr/bin/curl; do
     [ -x "$p" ] && C="$p" && break
 done
 if [ -z "$C" ]; then
-    if command -v curl >/dev/null 2>&1; then
-        C=$(command -v curl)
-    else
-        wget -O curl "http://master.dl.sourceforge.net/project/aqarahub/binutils/curl?viasf=1" 2>/dev/null
-        chmod +x curl 2>/dev/null
-        C=./curl
-    fi
+    wget -O curl "http://master.dl.sourceforge.net/project/aqarahub/binutils/curl?viasf=1"
+    chmod +x curl
+    C=./curl
 fi
-echo "[+] curl: $C"
-
 G="snailll2/zero3-firmware"
-OK=0
 for h in "ghfast.top/https://raw.githubusercontent.com/$G/main" \
          "cdn.jsdelivr.net/gh/$G@main" \
          "raw.githubusercontent.com/$G/main"; do
     rm -f i.sh
-    "$C" -skfL -m 15 "https://$h/install.sh" -o i.sh 2>/dev/null
-    if [ -s i.sh ] && head -3 i.sh | grep -q "Zero3"; then
-        echo "[+] install.sh 拉取成功: $h"
+    "$C" -skfL -m 10 "https://$h/install.sh" -o i.sh 2>/dev/null
+    if [ -s i.sh ]; then
         sh i.sh
-        OK=1
         break
     fi
 done
-[ "$OK" -eq 1 ] || echo "[-] 所有镜像均拉取失败（网络不通 GitHub 时：PC 下载 nx5gui_latest.tar.gz 推到设备 /tmp 后重跑本脚本，自动走离线模式）"
 ```
+
 
 引导脚本自动完成：查找/获取 curl（优先上次安装持久化的便携 curl）→ 三镜像拉取主安装脚本 → 主脚本再完成 备份用户配置 → 下载 release 包 → 精确替换固件（原厂 GUI 冻结共存不受影响）→ 热启动 → 验证。
 
