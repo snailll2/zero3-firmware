@@ -24,13 +24,11 @@ echo "========================================================"
 
 # ---------------------------------------------------------------- 1. HTTPS curl
 CURL_EXEC=""
-if [ -x /tmp/curl ]; then
-    CURL_EXEC="/tmp/curl"
-elif [ -x "$CONF_DIR/curl" ] || [ -x /data/curl ]; then
-    [ -x "$CONF_DIR/curl" ] && CURL_EXEC="$CONF_DIR/curl" || CURL_EXEC="/data/curl"
-elif command -v curl >/dev/null 2>&1; then
-    CURL_EXEC="curl"
-else
+for p in "$CONF_DIR/curl" /data/curl /tmp/curl /usr/bin/curl; do
+    [ -x "$p" ] && CURL_EXEC="$p" && break
+done
+[ -n "$CURL_EXEC" ] || { command -v curl >/dev/null 2>&1 && CURL_EXEC="curl"; }
+if [ -z "$CURL_EXEC" ]; then
     echo "[*] 无 HTTPS 能力(busybox wget 不支持),经 HTTP 获取便携 curl..."
     wget -O /tmp/curl "http://master.dl.sourceforge.net/project/aqarahub/binutils/curl?viasf=1" 2>/dev/null || true
     chmod a+x /tmp/curl 2>/dev/null || true
@@ -86,7 +84,7 @@ fi
 [ "$DOWNLOAD_OK" -eq 1 ] || for U in $URL_LIST; do
     echo "[*] 尝试源: $U"
     rm -f "$LOCAL_TAR"
-    if $CURL_EXEC -s -k -L --connect-timeout 10 -m 300 -o "$LOCAL_TAR" "$U" && [ -s "$LOCAL_TAR" ]; then
+    if $CURL_EXEC -skfL --connect-timeout 10 -m 300 -o "$LOCAL_TAR" "$U" && [ -s "$LOCAL_TAR" ]; then
         SZ=$(wc -c < "$LOCAL_TAR")
         if [ "$SZ" -gt 2000000 ] && tar -tzf "$LOCAL_TAR" >/dev/null 2>&1; then
             DOWNLOAD_OK=1
