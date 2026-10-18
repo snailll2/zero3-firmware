@@ -24,7 +24,7 @@ sh install.sh
 
 脚本自动完成：备份用户配置 → 多镜像下载 release 包 → 精确替换固件（原厂 GUI 冻结共存不受影响）→ 热启动 → 验证。
 
-## 版本清单格式（nx5gui.json，设备 OTA 检查用）
+## 版本清单格式（version.json，设备 OTA 检查用）
 
 ```json
 {
