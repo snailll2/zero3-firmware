@@ -11,6 +11,7 @@
 
 TARGET_BIN="/data/aciga_lvgl"
 CONF_DIR="/data/nx5_conf/intercom"
+mkdir -p "$CONF_DIR"
 TAR_NAME="nx5gui_latest.tar.gz"
 URL_LIST="
 https://ghfast.top/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/release/${TAR_NAME}
