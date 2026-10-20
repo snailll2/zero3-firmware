@@ -1,8 +1,8 @@
 {
-  "version": "1.0.117+20261007",
-  "release_date": "2026-10-18",
+  "version": "1.0.118+20261018",
+  "release_date": "2026-10-20",
   "file": "nx5gui",
-  "size": 4859532,
-  "md5": "2d01807237a41da161d30a9178210ce2",
-  "notes": ["tar \u5305\u5185\u6e05\u5355\u540c\u6b65\u4e3a version.json"]
+  "size": 4868176,
+  "md5": "a040519ee81658cd36fd7466c12f2c37",
+  "notes": ["\u53d1\u5e03\u5305\u8865\u9f50\u4e3b\u9898\u56fe\u6807(13 \u679a lsb \u56fe\u6807/\u6d45\u8272\u63a7\u5236\u56fe\u6807/\u6d45\u8272\u827a\u672f\u56fe/\u58c1\u7eb8)", "install.sh \u5f00\u673a\u81ea\u542f\u56fa\u5316"]
 }
