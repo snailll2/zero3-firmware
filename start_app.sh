@@ -1,4 +1,6 @@
 #!/bin/sh
+# 2026-10-21 复位循环根因修复:guardian/ult_dg 对 aciga_lvgl 的 killall 重启战会波及本 GUI 并升级为整机复位
+killall -9 aciga_guardian aciga_ult_dg 2>/dev/null
 # /data/bin/start_app.sh — NX5 开机接管脚本(Sinit 原厂钩子自动执行)
 #
 # 架构(2026-10-07 实测确定):面板的 VO 管线/背光由原厂 aciga_lvgl 初始化并持有,
