@@ -3,6 +3,6 @@
   "release_date": "2026-10-22",
   "file": "nx5gui",
   "size": 4881328,
-  "md5": "2454313cc46e940c6d2ca10ac591b981",
-  "notes": ["OTA \u590d\u6d4b\u7248"]
+  "md5": "1540e02f289a4aeb8c7111c8da1fa943",
+  "notes": ["\u4fee\u590d\u53d1\u5e03\u94fe:publish \u65f6\u540c\u6b65 release/ \u76ee\u5f55\u5230 main(install.sh \u9996\u9009\u6e90\u4e0d\u518d\u53d1\u65e7\u5305);OTA \u7248\u672c\u8bed\u4e49\u5316\u6bd4\u8f83"]
 }
