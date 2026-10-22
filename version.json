@@ -1,8 +1,8 @@
 {
-  "version": "1.0.123+20261022",
+  "version": "1.0.125+20261022",
   "release_date": "2026-10-22",
   "file": "nx5gui",
   "size": 4881328,
-  "md5": "ad62176ae62baaf5e89330a9cf5e92f0",
-  "notes": ["OTA \u6d4b\u8bd5\u7248\u672c"]
+  "md5": "2454313cc46e940c6d2ca10ac591b981",
+  "notes": ["OTA \u590d\u6d4b\u7248"]
 }
