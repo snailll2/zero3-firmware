@@ -103,13 +103,13 @@ fi
 # ghfast/jsdelivr 会把 release 资产缓存数小时,曾把 1.0.118 旧包当 latest 发给设备。
 # 解包读 tar 内 version.json,与 raw 源 version.json 比对;旧包一律中止(离线口可 FORCE=1 跳过)。
 if [ "$DOWNLOAD_OK" -eq 1 ] && [ -z "$FORCE" ]; then
-    tar -zxf "$LOCAL_TAR" -O version.json -C / 2>/dev/null > /tmp/inst_tar_ver.json || true
-    TAR_VER=$(grep -o '"version"[^,]*' /tmp/inst_tar_ver.json 2>/dev/null | head -1 | cut -d'"' -f4)
     "$CURL_EXEC" -skfL -m 10 "https://raw.githubusercontent.com/snailll2/zero3-firmware/main/version.json" -o /tmp/inst_ref_ver.json 2>/dev/null || true
     REF_VER=$(grep -o '"version"[^,]*' /tmp/inst_ref_ver.json 2>/dev/null | head -1 | cut -d'"' -f4)
+    REF_SIZE=$(grep -o '"size"[^,]*' /tmp/inst_ref_ver.json 2>/dev/null | head -1 | grep -o '[0-9]*')
+    TAR_SIZE_CK=$SZ
     echo "[*] 包版本: $TAR_VER / 官方最新: ${REF_VER:-未知}"
-    if [ -n "$TAR_VER" ] && [ -n "$REF_VER" ] && [ "$TAR_VER" != "$REF_VER" ]; then
-        echo "[-] 镜像缓存了旧包($TAR_VER ≠ $REF_VER),已中止以防降级。"
+    if [ -n "$REF_SIZE" ] && [ -n "$TAR_SIZE_CK" ] && [ "$TAR_SIZE_CK" != "$REF_SIZE" ]; then
+        echo "[-] 镜像缓存了旧包(大小 $TAR_SIZE_CK ≠ 官方 $REF_SIZE),已中止以防降级。"
         echo "    请稍后重试(缓存约 5-10 分钟过期),或 FORCE=1 强制安装 / 离线模式。"
         exit 1
     fi
