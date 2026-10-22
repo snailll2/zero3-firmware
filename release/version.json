@@ -1,8 +1,8 @@
 {
-  "version": "1.0.128+20261022",
+  "version": "1.0.129+20261022",
   "release_date": "2026-10-22",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 2737878,
-  "md5": "e279fc18415049d6987c3f4eb8a946f3",
-  "notes": ["OTA tar \u5168\u91cf\u66f4\u65b0\u6b63\u5f0f\u7248;chunk \u8def\u5f84\u7edf\u4e00\u4fee\u590d"]
+  "size": 3537756,
+  "md5": "053b07478ac15ce297a7ee58637469c9",
+  "notes": ["\u8865\u5168\u4e3b\u9898\u5305:tar \u5185 theme \u6539\u4e3a\u5b8c\u6574 379 \u6587\u4ef6(\u542b layout/ \u5e03\u5c40\u9884\u89c8\u56fe\u4e0e screen \u8865\u5145\u56fe),\u4fee\u590d\u7f16\u8f91\u5668\u80cc\u666f\u56fe\u5927\u91cf 404"]
 }
