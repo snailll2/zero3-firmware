@@ -486,7 +486,7 @@
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', slim);
       else slim();
     })();
-""
+
     /* 投屏全屏:原生 Fullscreen 优先,iOS 等不支持时退化伪全屏(fixed 铺满) */
     var ex = document.getElementById('liveFsExit');
     function syncExit(isOn) { if (ex) ex.style.display = isOn ? 'block' : 'none'; }
@@ -518,7 +518,7 @@
     document.addEventListener('fullscreenchange', __fsReset);
     document.addEventListener('webkitfullscreenchange', __fsReset);
   </script>
-""
+
   <main>
     <!-- Tab 1: Live Monitor & Screen -->
     <div id="tab-screen" class="tab-content active">
@@ -539,7 +539,7 @@
 
           <div class="screen-container">
             <canvas id="liveScreenCanvas" width="1024" height="600" style="width:100%;height:100%;object-fit:cover;cursor:crosshair;display:block;border-radius:14px;"></canvas>
-""            <button class="fs-btn" id="liveFsExit" onclick="toggleLiveFs()" style="display:none;">✕ 退出全屏</button>
+            <button class="fs-btn" id="liveFsExit" onclick="toggleLiveFs()" style="display:none;">✕ 退出全屏</button>
           </div>
           <div class="screen-footer">
             <span style="font-size:12px;color:var(--accent-cyan);" id="streamFps">🔴 等待画面...</span>
@@ -608,7 +608,7 @@
               <div id="screenActions" style="display:flex;gap:6px;flex-wrap:wrap;">
                 <button class="btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="addScreen()">➕ 新增屏幕</button>
                 <button class="btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="renameScreen()">✏️ 重命名</button>
-""                <button class="btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="changeScreenIcon()">🧩 屏幕图标</button>
+                <button class="btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="changeScreenIcon()">🧩 屏幕图标</button>
                 <button class="btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="deleteScreen()">🗑️ 删除</button>
                 <button class="btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="setDefaultScreen()">⭐ 设为默认</button>
               </div>
@@ -656,8 +656,8 @@
             <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'feat_unlock')" onclick="onPaletteClickAdd('feat_unlock')">🔓 开锁</div>
             <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'clock')" onclick="onPaletteClickAdd('clock')">🕒 时钟</div>
             <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'weather')" onclick="onPaletteClickAdd('weather')">⛅ 天气</div>
-""            <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'quick')" onclick="onPaletteClickAdd('quick')">⚡ 快捷操作</div>
-""            <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'udp_cmd')" onclick="onPaletteClickAdd('udp_cmd')">📡 UDP 控制</div>
+            <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'quick')" onclick="onPaletteClickAdd('quick')">⚡ 快捷操作</div>
+            <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'udp_cmd')" onclick="onPaletteClickAdd('udp_cmd')">📡 UDP 控制</div>
             <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'shell_cmd')" onclick="onPaletteClickAdd('shell_cmd')">🖥️ 自定义命令</div>
             <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'entity')" onclick="onPaletteClickAdd('entity')">➕ 实体组件</div>
             <span style="font-size:11px;color:#64748b;">点击或拖拽组件到下方画布网格中</span>
@@ -1981,8 +1981,8 @@
     function defaultStyleFor(type) {
       if (type === 'clock') return 'digital_minimal';
       if (type === 'weather') return 'stock_illustrated';
-""      if (type === 'quick') return 'default';
-""      if (type === 'udp_cmd' || type === 'shell_cmd') return 'default';
+      if (type === 'quick') return 'default';
+      if (type === 'udp_cmd' || type === 'shell_cmd') return 'default';
       return '';
     }
 
@@ -2017,8 +2017,8 @@
         comp.options = { bg: f.color };
       }
       else if (type === 'clock') { comp.w = 2; comp.h = 1; }
-""      else if (type === 'quick') { comp.w = 2; comp.h = 2; }
-""      else if (type === 'udp_cmd') {
+      else if (type === 'quick') { comp.w = 2; comp.h = 2; }
+      else if (type === 'udp_cmd') {
         comp.name = 'UDP 控制';
         comp.udp_ip = ''; comp.udp_port = 8888; comp.udp_payload = ''; comp.udp_repeat = 1;
       }
@@ -2799,7 +2799,7 @@
         // apply user-configured bg/border/bg_image so editor preview matches device rendering
         const copts = c.options || {};
         const isFrameless = (c.type === 'clock' || c.type === 'weather');
-""        const isLightCard = (c.type === 'quick');
+        const isLightCard = (c.type === 'quick');
         if (copts.bg) el.style.background = copts.bg;
         else if (!copts.bg_image) {
           el.style.background = isFrameless ? 'transparent' : (isLightCard ? '#ffffff' : '#141c2b');
