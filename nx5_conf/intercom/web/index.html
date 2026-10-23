@@ -3559,6 +3559,8 @@
             out.name = String(c.label || c.name || '');
             out.icon = String(c.icon || '');
             out.color = (typeof c.color === 'number') ? (c.color >>> 0) : 0;
+            { const hx = out.color ? ('00000' + out.color.toString(16)).slice(-6) : '';
+              out.options = { bg: hx ? ('#' + hx) : '' }; }   /* 设备端解析 options.bg → 强调色/底色 */
             out.udp_ip = String(c.udp_ip || '');
             out.udp_port = Math.max(1, Math.min(65535, Number(c.udp_port) || 8888));
             out.udp_payload = String(c.udp_payload || '').slice(0, 159);
