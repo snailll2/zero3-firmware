@@ -2020,7 +2020,7 @@
       else if (type === 'quick') { comp.w = 2; comp.h = 2; }
       else if (type === 'udp_cmd') {
         comp.name = 'UDP 控制';
-        comp.udp_ip = ''; comp.udp_port = 8888; comp.udp_payload = ''; comp.udp_repeat = 1;
+        comp.udp_ip = ''; comp.udp_port = 8888; comp.udp_payload = ''; comp.udp_repeat = 1; comp.label=''; comp.icon=''; comp.color=0;
       }
       else if (type === 'shell_cmd') {
         comp.name = '自定义命令';
@@ -3556,6 +3556,9 @@
           if (out.w < 1) out.w = 1;
           if (out.h < 1) out.h = 1;
           if (c.type === 'udp_cmd' || c.type === 'shell_cmd') {
+            out.name = String(c.label || c.name || '');
+            out.icon = String(c.icon || '');
+            out.color = (typeof c.color === 'number') ? (c.color >>> 0) : 0;
             out.udp_ip = String(c.udp_ip || '');
             out.udp_port = Math.max(1, Math.min(65535, Number(c.udp_port) || 8888));
             out.udp_payload = String(c.udp_payload || '').slice(0, 159);
