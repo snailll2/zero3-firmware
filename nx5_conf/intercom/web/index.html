@@ -923,7 +923,7 @@
                     <label class="form-label">展示背景颜色 (与实体卡一致)</label>
                     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                       <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#cbd5e1;cursor:pointer;">
-                        <input type="checkbox" id="ctrlBgEnable" onchange="onCtrlFieldChange()"> 启用背景
+                        <input type="checkbox" id="ctrlBgEnable" onchange="onCtrlBgEnableChange()"> 启用背景
                       </label>
                       <input type="color" id="ctrlBgColor" value="#3D7FFF" onchange="syncCtrlBgHex();onCtrlFieldChange()" style="width:44px;height:30px;padding:2px;background:rgba(15,23,42,0.6);border:1px solid #334155;border-radius:6px;cursor:pointer;">
                       <input type="text" id="ctrlBgHex" class="form-input" placeholder="#3D7FFF" value="#3D7FFF" style="width:96px;" onchange="syncCtrlBgColor();onCtrlFieldChange()">
@@ -2953,6 +2953,20 @@
       const c = document.getElementById('ctrlBgColor');
       const h = document.getElementById('ctrlBgHex');
       if (c && h && /^#[0-9a-fA-F]{6}$/.test(h.value.trim())) c.value = h.value.trim();
+    }
+    /* 启用背景色勾选框独立处理(2026-10-23):取消勾选必须真正生效——
+     * 旧逻辑勾选框 change 也走 onCtrlFieldChange,里面"选色自动启用"会把
+     * 勾选无条件勾回(hex 框残留有效值)→ 永远无法取消。 */
+    function onCtrlBgEnableChange() {
+      const comp = g_selectedComp ? findCompById(g_selectedComp) : null;
+      if (!comp || (comp.type !== 'udp_cmd' && comp.type !== 'shell_cmd')) return;
+      const g = id => document.getElementById(id);
+      const checked = g('ctrlBgEnable').checked;
+      const v = g('ctrlBgHex').value.trim();
+      const ok = /^#[0-9a-fA-F]{6}$/.test(v);
+      comp.color = (checked && ok) ? ((parseInt(v.slice(1), 16) | 0xFF000000) >>> 0) : 0;
+      renderEditorCanvas();
+      renderScreenTabs();
     }
     function onCtrlFieldChange() {
       const comp = g_selectedComp ? findCompById(g_selectedComp) : null;
