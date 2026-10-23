@@ -1,8 +1,8 @@
 {
-  "version": "1.0.129+20261022",
-  "release_date": "2026-10-22",
+  "version": "1.0.131+20261023",
+  "release_date": "2026-10-23",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 3537756,
-  "md5": "053b07478ac15ce297a7ee58637469c9",
-  "notes": ["\u8865\u5168\u4e3b\u9898\u5305:tar \u5185 theme \u6539\u4e3a\u5b8c\u6574 379 \u6587\u4ef6(\u542b layout/ \u5e03\u5c40\u9884\u89c8\u56fe\u4e0e screen \u8865\u5145\u56fe),\u4fee\u590d\u7f16\u8f91\u5668\u80cc\u666f\u56fe\u5927\u91cf 404"]
+  "size": 3540188,
+  "md5": "cac63a76aaf3a86905ae63be49c6cf38",
+  "notes": ["163\u6279\u6b21\u7a33\u5b9a\u6839\u6cbb:GPIO83\u5916\u90e8\u786c\u770b\u95e8\u72d7\u5582\u72d7(NX5_GPIO83FEED,install\u6309\u6279\u6b21\u81ea\u52a8\u5f00\u542f)", "\u771f\u606f\u5c4f\u4fee\u590d:\u80cc\u5149\u56de\u5f52\u5185\u5efasysfs PWM\u901a\u9053,duty=0\u771f\u706d", "\u4e8c\u8fdb\u5236\u5b9a\u540dnx5gui,\u4e0d\u518d\u501f\u7528aciga_lvgl(\u907f\u5f00guardian killall\u8fde\u5750)", "start_app v6:\u53bb\u9884\u51bb\u7ed3(GUI\u5185keeper\u6267\u884c)+\u6301\u4e45\u5316\u65e5\u5fd7", "\u8f6f\u4ef6\u770b\u95e8\u72d7\u5582\u72d7\u6539ioctl KEEPALIVE+0.7s\u9ad8\u9891(\u65e7\u6279\u6b21\u53d7\u76ca)", "install.sh\u65b0\u589eioctrl.ko\u6279\u6b21\u68c0\u6d4b,\u81ea\u52a8\u751f\u6210nx5_env.sh"]
 }

@@ -9,7 +9,8 @@
 # 更新地址: 本仓库 snailll2/zero3-firmware
 # ==============================================================================
 
-TARGET_BIN="/data/aciga_lvgl"
+TARGET_BIN="/data/nx5gui"
+LEGACY_BIN="/data/aciga_lvgl"   # ≤1.0.130 借用过原厂名;升级时须清掉避免双实例锁冲突
 CONF_DIR="/data/nx5_conf/intercom"
 mkdir -p "$CONF_DIR"
 TAR_NAME="nx5gui_latest.tar.gz"
@@ -103,7 +104,7 @@ fi
 # ghfast/jsdelivr 会把 release 资产缓存数小时,曾把 1.0.118 旧包当 latest 发给设备。
 # 解包读 tar 内 version.json,与 raw 源 version.json 比对;旧包一律中止(离线口可 FORCE=1 跳过)。
 if [ "$DOWNLOAD_OK" -eq 1 ] && [ -z "$FORCE" ]; then
-    "$CURL_EXEC" -skfL -m 10 "https://raw.githubusercontent.com/snailll2/zero3-firmware/main/version.json" -o /tmp/inst_ref_ver.json 2>/dev/null || true
+    "$CURL_EXEC" -skfL -m 10 "https://raw.githubusercontent.com/snailll2/zero3-firmware/main/release/version.json" -o /tmp/inst_ref_ver.json 2>/dev/null || true
     REF_VER=$(grep -o '"version"[^,]*' /tmp/inst_ref_ver.json 2>/dev/null | head -1 | cut -d'"' -f4)
     REF_SIZE=$(grep -o '"size"[^,]*' /tmp/inst_ref_ver.json 2>/dev/null | head -1 | grep -o '[0-9]*')
     TAR_SIZE_CK=$SZ
@@ -119,28 +120,57 @@ fi
 echo "[3/6] 停止现有 GUI(按 exe 精确匹配,原厂冻结共存不受影响)..."
 for p in $(ls /proc 2>/dev/null | grep -E '^[0-9]+$'); do
     e=$(readlink /proc/$p/exe 2>/dev/null)
-    [ "$e" = "$TARGET_BIN" ] && kill -9 $p 2>/dev/null
+    { [ "$e" = "$TARGET_BIN" ] || [ "$e" = "$LEGACY_BIN" ]; } && kill -9 $p 2>/dev/null
+done
+# 停掉在跑的旧接管脚本实例(防其 ALIVE 轮询再拉旧二进制;新脚本随包落位下次开机生效)
+for p in $(ps | grep -E '\{?start_app\.sh' | grep -v grep | awk '{print $1}'); do
+    kill -9 $p 2>/dev/null
 done
 sleep 2
 
-echo "[3.5/6] 固化开机自启(接管脚本 → /data/bin,Sinit 钩子开机执行)..."
+# ---------------------------------------------------------------- 3.7 批次检测 → 生成 nx5_env.sh
+# 硬件批次判据:/system/ko/ioctrl.ko 的 md5(2026-10-23 逆向定案,两批驱动仅 PWM 量程差):
+#   432548a3… = 新批次(163 型,固件 4.4.1):板上有外部硬看门狗(GPIO83 喂狗线),
+#               原厂 GUI 被冻结后必须由我们喂 → NX5_GPIO83FEED=1;
+#               /dev/watchdog 武装后行为未单独验证 → NX5_NOWDT=1(暂不开软件狗)。
+#   ae647381…(及其它)= 旧批次(149 型,固件 2.3.2):无外部看门狗电路,
+#               GUI 正常开狗喂狗(崩溃→整机复位→原厂自恢复语义保留)。
+IO_MD5=$(md5sum /system/ko/ioctrl.ko 2>/dev/null | cut -d' ' -f1)
+ENV_FILE="/data/bin/nx5_env.sh"
 mkdir -p /data/bin
+case "$IO_MD5" in
+    432548a3*)
+        printf '# 新批次(163 型):外部硬看门狗 GPIO83 喂狗 + 暂不开软件狗(install 自动生成)\nexport NX5_GPIO83FEED=1\nexport NX5_NOWDT=1\n' > "$ENV_FILE"
+        BATCH="新批次(外部看门狗)"
+        ;;
+    *)
+        printf '# 旧批次(149 型):无外部看门狗,GUI 自行开狗喂狗(install 自动生成)\n' > "$ENV_FILE"
+        BATCH="旧批次(软件喂狗)"
+        ;;
+esac
+chmod +x "$ENV_FILE" 2>/dev/null
+echo "[*] 批次判定: ioctrl.ko=$IO_MD5 → $BATCH → $ENV_FILE"
+
+echo "[3.5/6] 固化开机自启(接管脚本 → /data/bin,Sinit 钩子开机执行)..."
 if [ -f /data/bin/start_app.sh ]; then
     cp -f /data/bin/start_app.sh /data/bin/start_app.sh.bak 2>/dev/null || true
 fi
 tar -zxvf "$LOCAL_TAR" -C /data > /tmp/install_tar.log 2>&1
-if [ ! -x /data/nx5gui ]; then
+if [ ! -f /data/nx5gui ]; then
     echo "[-] 解包断言失败(nx5gui 缺失),中止(旧固件仍在)..."
     rm -f "$LOCAL_TAR"
     exit 1
 fi
+chmod +x /data/nx5gui
+sync
 # 还原用户配置(安装包内不带配置,避免覆盖)
 if [ -d "$BACKUP_DIR" ]; then
     echo "[*] 还原用户配置..."
     cp -f "$BACKUP_DIR"/*.json "$CONF_DIR/" 2>/dev/null || true
     rm -rf "$BACKUP_DIR"
 fi
-mv -f /data/nx5gui "$TARGET_BIN" && chmod +x "$TARGET_BIN" && sync
+# 清理 ≤1.0.130 的借用名旧二进制(防双实例 flock 冲突),留档 .removed
+[ -f "$LEGACY_BIN" ] && mv -f "$LEGACY_BIN" "${LEGACY_BIN}.removed" 2>/dev/null
 # 接管脚本落位(幂等;已有 start_app.sh.bak 时不覆盖用户备份)
 if [ -f /data/start_app.sh ]; then
     cp -f /data/start_app.sh /data/bin/start_app.sh && chmod +x /data/bin/start_app.sh
@@ -154,9 +184,13 @@ if [ -x /tmp/curl ] && [ ! -x "$CONF_DIR/curl" ]; then
     cp -f /tmp/curl "$CONF_DIR/curl" 2>/dev/null && chmod +x "$CONF_DIR/curl" 2>/dev/null
 fi
 
-# ---------------------------------------------------------------- 6. 热启动 + 验证
-echo "[5/6] 热启动 GUI..."
-( cd /data && nohup /data/aciga_lvgl >/data/nx5gui.out 2>&1 & )
+# ---------------------------------------------------------------- 6. 热启动 + 验证(带批次环境)
+echo "[5/6] 热启动 GUI(批次环境: $BATCH)..."
+(
+    cd /data
+    [ -f /data/bin/nx5_env.sh ] && . /data/bin/nx5_env.sh
+    NX5TS_DBG=1 nohup ./nx5gui >> /data/nx5gui_live.log 2>&1 &
+)
 echo "[6/6] 验证..."
 sleep 5
 GUI_OK=0
@@ -178,8 +212,8 @@ if [ "$GUI_OK" -eq 1 ]; then
     echo " -> 授权: 设置页查看机器码/激活状态"
     echo "========================================================"
 else
-    echo "[-] GUI 未能立即拉起,查看 /data/nx5gui.out 尾部:"
-    tail -n 8 /data/nx5gui.out 2>/dev/null
+    echo "[-] GUI 未能立即拉起,查看 /data/nx5gui_live.log 尾部:"
+    tail -n 8 /data/nx5gui_live.log 2>/dev/null
     echo "[*] /data/bin keeper 会自动重试拉起;5 秒后复查。"
     sleep 5
     for p in $(ls /proc 2>/dev/null | grep -E '^[0-9]+$'); do
