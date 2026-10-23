@@ -117,13 +117,15 @@ if [ "$DOWNLOAD_OK" -eq 1 ] && [ -z "$FORCE" ]; then
 fi
 
 # ---------------------------------------------------------------- 5. 替换固件(精确 kill,原厂不动)
-echo "[3/6] 停止现有 GUI(按 exe 精确匹配,原厂冻结共存不受影响)..."
+echo "[3/6] 停止现有 GUI(按 exe 前缀精确匹配含 (deleted),原厂冻结共存不受影响)..."
 for p in $(ls /proc 2>/dev/null | grep -E '^[0-9]+$'); do
     e=$(readlink /proc/$p/exe 2>/dev/null)
-    { [ "$e" = "$TARGET_BIN" ] || [ "$e" = "$LEGACY_BIN" ]; } && kill -9 $p 2>/dev/null
+    case "$e" in
+        "$TARGET_BIN"|"$TARGET_BIN (deleted)"|"$LEGACY_BIN"|"$LEGACY_BIN (deleted)") kill -9 $p 2>/dev/null ;;
+    esac
 done
 # 停掉在跑的旧接管脚本实例(防其 ALIVE 轮询再拉旧二进制;新脚本随包落位下次开机生效)
-for p in $(ps | grep -E '\{?start_app\.sh' | grep -v grep | awk '{print $1}'); do
+for p in $(ps | grep start_app | grep -v grep | awk '{print $1}'); do
     kill -9 $p 2>/dev/null
 done
 sleep 2
