@@ -142,7 +142,7 @@ ENV_FILE="/data/bin/nx5_env.sh"
 mkdir -p /data/bin
 case "$IO_MD5" in
     432548a3*)
-        printf '# 新批次(163 型):外部硬看门狗 GPIO83 喂狗 + 暂不开软件狗(install 自动生成)\nexport NX5_GPIO83FEED=1\nexport NX5_NOWDT=1\n' > "$ENV_FILE"
+        printf '# 新批次(163 型):外部硬看门狗 GPIO83 喂狗 + 暂不开软件狗 + LINKDORA 背光(install 自动生成)\nexport NX5_GPIO83FEED=1\nexport NX5_NOWDT=1\nexport NX5_BL_LINKDORA=1\n' > "$ENV_FILE"
         BATCH="新批次(外部看门狗)"
         ;;
     *)
