@@ -57,11 +57,20 @@ done
 }
 ```
 
-## 回退
+## 卸载 / 回退
 
-- 设备上保留 `/data/aciga_lvgl.bak`（每次 OTA 自动备份），telnet 执行：
-  `cp /data/aciga_lvgl.bak /data/aciga_lvgl && kill -9 $(pidof aciga_lvgl)`
-- 彻底回退出厂：`mv /data/bin /data/bin.off && reboot`（开机链自动恢复原厂显示）
+**标准卸载(推荐,1.0.131 起)** —— 设备 telnet 一行:
+
+```sh
+curl -skfL -o /tmp/uninstall.sh https://ghfast.top/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/uninstall.sh && sh /tmp/uninstall.sh
+```
+
+- 默认:停 GUI + 摘开机链 + 清调试残留,**保留用户配置/授权/主题**,最后重启回出厂
+- `PURGE=1 sh /tmp/uninstall.sh`:连同 nx5_conf(HA 配置+授权!)、主题、备份彻底清除
+- `REBOOT=0 sh /tmp/uninstall.sh`:只清理不重启(面板立即回原厂画面)
+- 安全顺序:先解冻原厂再停 nx5gui(新批次设备外部看门狗需要原厂接管喂狗)
+
+手工应急回退:`mv /data/bin /data/bin.off && reboot`(仅摘开机链,文件保留)
 
 ## 授权
 
