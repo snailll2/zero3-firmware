@@ -5725,14 +5725,4 @@
     </div>
   </div>
 </body>
-</html>      if (c.type === 'udp_cmd' || c.type === 'shell_cmd') {
-        comp.name = c.name || c.label || '';
-        comp.icon = c.icon || '';
-        comp.color = Number(c.color) || 0;
-        comp.udp_ip = c.udp_ip || '';
-        comp.udp_port = Number(c.udp_port) || 8888;
-        comp.udp_payload = c.udp_payload || '';
-        comp.udp_repeat = Math.max(1, Math.min(10, Number(c.udp_repeat) || 1));
-        comp.command = c.command || '';
-      }
-
+</html>
