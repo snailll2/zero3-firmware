@@ -2020,7 +2020,7 @@
       else if (type === 'quick') { comp.w = 2; comp.h = 2; }
       else if (type === 'udp_cmd') {
         comp.name = 'UDP 控制';
-        comp.udp_ip = ''; comp.udp_port = 8888; comp.udp_payload = ''; comp.udp_repeat = 1; comp.label=''; comp.icon=''; comp.color=0;
+        comp.udp_ip = ''; comp.udp_port = 8888; comp.udp_payload = ''; comp.udp_repeat = 1;
       }
       else if (type === 'shell_cmd') {
         comp.name = '自定义命令';
@@ -3556,7 +3556,7 @@
           if (out.w < 1) out.w = 1;
           if (out.h < 1) out.h = 1;
           if (c.type === 'udp_cmd' || c.type === 'shell_cmd') {
-            out.name = String(c.label || c.name || '');
+            out.name = String(c.name || c.label || '');
             out.icon = String(c.icon || '');
             out.color = (typeof c.color === 'number') ? (c.color >>> 0) : 0;
             { const hx = out.color ? ('00000' + out.color.toString(16)).slice(-6) : '';
@@ -3736,6 +3736,16 @@
               bg_image: (typeof o.bg_image === 'string' && /^(up:[\w.\-]{1,60}|[a-z0-9_]{1,48})$/.test(o.bg_image.trim())) ? o.bg_image.trim() : '',
               actions: []
             };
+          }
+          if (c.type === 'udp_cmd' || c.type === 'shell_cmd') {
+            comp.name = c.name || c.label || '';
+            comp.icon = c.icon || '';
+            comp.color = Number(c.color) || 0;
+            comp.udp_ip = c.udp_ip || '';
+            comp.udp_port = Number(c.udp_port) || 8888;
+            comp.udp_payload = c.udp_payload || '';
+            comp.udp_repeat = Math.max(1, Math.min(10, Number(c.udp_repeat) || 1));
+            comp.command = c.command || '';
           }
           components.push(comp);
         });
@@ -5701,4 +5711,14 @@
     </div>
   </div>
 </body>
-</html>
+</html>      if (c.type === 'udp_cmd' || c.type === 'shell_cmd') {
+        comp.name = c.name || c.label || '';
+        comp.icon = c.icon || '';
+        comp.color = Number(c.color) || 0;
+        comp.udp_ip = c.udp_ip || '';
+        comp.udp_port = Number(c.udp_port) || 8888;
+        comp.udp_payload = c.udp_payload || '';
+        comp.udp_repeat = Math.max(1, Math.min(10, Number(c.udp_repeat) || 1));
+        comp.command = c.command || '';
+      }
+
