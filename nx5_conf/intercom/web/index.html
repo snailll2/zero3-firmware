@@ -454,6 +454,7 @@
       /* 合并页:网络卡片搬入设置页后,随打开即加载(原挂在 network tab 激活) */
       initNetworkTab();
       apcLoad();
+      btLoad(); zbLoad();
     }
     /* ---- NX5 精简模式(默认启用):隐藏暂不支持功能的编辑入口 ----
      * 设备端检测到 NX5_WEB_FULL=1 时不注入精简标志;未注入 = 精简:
@@ -1193,6 +1194,26 @@
           <div style="display:flex;gap:10px;margin-top:10px;">
             <button class="btn-secondary" onclick="btSave()">💾 保存并应用</button>
             <button class="btn-secondary" onclick="btLoad()">🔄 刷新状态</button>
+          </div>
+        </div>
+        <div class="glass-card">
+          <div class="card-title"><span>📡 Zigbee 网关(Zigbee2MQTT 接入)</span><span id="zbGwState" style="font-size:12px;color:#94a3b8;"></span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="form-group">
+              <label class="form-label">启用 Zigbee 网关</label>
+              <select id="zbEnable" class="form-select" onchange="zbSave()">
+                <option value="0">关闭</option><option value="1">开启</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Z2M 连接地址</label>
+              <input id="zbHint" class="form-input" readonly />
+            </div>
+          </div>
+          <div id="zbGwInfo" style="font-size:11px;color:#94a3b8;margin-top:8px;line-height:1.7;">开启后 Zigbee2MQTT 用串口 tcp://&lt;面板IP&gt;:8899(adapter: ezsp)接入面板内置 Zigbee 芯片。开启约需 1 分钟(含蓝牙链路自动恢复),期间蓝牙代理短暂中断。</div>
+          <div style="display:flex;gap:10px;margin-top:10px;">
+            <button class="btn-secondary" onclick="zbSave()">💾 保存并应用</button>
+            <button class="btn-secondary" onclick="zbLoad()">🔄 刷新状态</button>
           </div>
         </div>
         <div class="glass-card">
@@ -5184,6 +5205,32 @@
         if (r.ok){ st.textContent = r.applied ? '已应用' : '已保存'; st.style.color = '#34d399'; }
         else { st.textContent = '保存失败: ' + (r.error || '?'); st.style.color = '#f43f5e'; }
         setTimeout(btLoad, 1500);
+      }catch(e){ alert('保存失败: ' + e); }
+    }
+
+    /* Zigbee 网关:读写 /api/zigbee(开关;开启异步 ~1min,轮询 running) */
+    async function zbLoad(){
+      try{
+        const a = await (await fetch('/api/zigbee', {cache:'no-store'})).json();
+        set('zbEnable', a.enabled ? '1' : '0');
+        const st = document.getElementById('zbGwState');
+        const running = a.running ? '运行中' : (a.enabled ? '启动中…' : '未启用');
+        st.textContent = running + ' · 端口 ' + (a.port || 8899);
+        st.style.color = a.running ? '#34d399' : (a.enabled ? '#f59e0b' : '#94a3b8');
+        document.getElementById('zbHint').value = 'tcp://' + location.hostname + ':' + (a.port || 8899);
+        if (!a.installed) { st.textContent = '未安装'; st.style.color = '#f43f5e'; }
+        if (a.enabled && !a.running) setTimeout(zbLoad, 5000);   /* 启动中:5s 轮询 */
+      }catch(e){ console.warn('zbLoad', e); }
+    }
+    async function zbSave(){
+      const body = { enabled: gv('zbEnable') === '1' };
+      try{
+        const r = await (await fetch('/api/zigbee', {method:'POST',
+          headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)})).json();
+        const st = document.getElementById('zbGwState');
+        if (r.ok){ st.textContent = body.enabled ? '启动中…(约 1 分钟)' : '已关闭'; st.style.color = body.enabled ? '#f59e0b' : '#94a3b8'; }
+        else { st.textContent = '失败: ' + (r.error || '?'); st.style.color = '#f43f5e'; }
+        setTimeout(zbLoad, body.enabled ? 8000 : 1500);
       }catch(e){ alert('保存失败: ' + e); }
     }
 

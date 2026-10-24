@@ -48,8 +48,10 @@
         export PATH=$PATH:/system/bin:/system/user/bin
         export LD_LIBRARY_PATH=/system/user/lib:/system/lib
         NX5TS_DBG=1 nohup ./nx5gui >> /data/nx5gui_live.log 2>&1 &
-        # 蓝牙代理(2026-10-24):面板 mesh 空,停 mgw_bt 换 btproxy(冻结 guardian 由脚本处理)
-        [ -x /data/btproxy.sh ] && [ -f /data/btproxy.conf ] && (sleep 8; /data/btproxy.sh >/dev/null 2>&1 &)
+        # 蓝牙代理(2026-10-24):开关标志 nx5_conf/bt_on(面板设置页/Web 卡片双端控制)
+        [ -x /data/btproxy.sh ] && [ -f /data/nx5_conf/intercom/bt_on ] && (sleep 8; /data/btproxy.sh >/dev/null 2>&1 &)
+        # Zigbee 网关(2026-10-24):reset 模式含 NCP 硬复位+蓝牙链路自恢复(后台 ~1min,不阻塞开机)
+        [ -x /data/zbbridge.sh ] && [ -f /data/nx5_conf/intercom/zb_on ] && (sleep 20; setsid sh /data/zbbridge.sh reset >/data/zb_reset.log 2>&1 &)
         sleep 5
         STABLE=0
         k=0
