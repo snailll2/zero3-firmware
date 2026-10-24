@@ -116,20 +116,6 @@ if [ "$DOWNLOAD_OK" -eq 1 ] && [ -z "$FORCE" ]; then
     fi
 fi
 
-# ---------------------------------------------------------------- 5. 替换固件(精确 kill,原厂不动)
-echo "[3/6] 停止现有 GUI(按 exe 前缀精确匹配含 (deleted),原厂冻结共存不受影响)..."
-for p in $(ls /proc 2>/dev/null | grep -E '^[0-9]+$'); do
-    e=$(readlink /proc/$p/exe 2>/dev/null)
-    case "$e" in
-        "$TARGET_BIN"|"$TARGET_BIN (deleted)"|"$LEGACY_BIN"|"$LEGACY_BIN (deleted)") kill -9 $p 2>/dev/null ;;
-    esac
-done
-# 停掉在跑的旧接管脚本实例(防其 ALIVE 轮询再拉旧二进制;新脚本随包落位下次开机生效)
-for p in $(ps | grep start_app | grep -v grep | awk '{print $1}'); do
-    kill -9 $p 2>/dev/null
-done
-sleep 2
-
 # ---------------------------------------------------------------- 3.7 批次检测 → 生成 nx5_env.sh
 # 硬件批次判据:/system/ko/ioctrl.ko 的 md5(2026-10-23 逆向定案,两批驱动仅 PWM 量程差):
 #   432548a3… = 新批次(163 型,固件 4.4.1):板上有外部硬看门狗(GPIO83 喂狗线),
@@ -153,10 +139,12 @@ esac
 chmod +x "$ENV_FILE" 2>/dev/null
 echo "[*] 批次判定: ioctrl.ko=$IO_MD5 → $BATCH → $ENV_FILE"
 
-echo "[3.5/6] 固化开机自启(接管脚本 → /data/bin,Sinit 钩子开机执行)..."
-if [ -f /data/bin/start_app.sh ]; then
-    cp -f /data/bin/start_app.sh /data/bin/start_app.sh.bak 2>/dev/null || true
-fi
+# ---------------------------------------------------------------- 5. 替换固件(精确 kill,原厂不动)
+# ★2026-10-23 顺序修正(229 实测踩坑):旧批次(149 型)老 GUI 持软件看门狗,
+# 旧顺序"先 kill → 再解包(3.6MB 数秒)→ 才热启动",kill 到新 GUI 接管喂狗的
+# 空窗超看门狗阈值 → 整机复位,安装中途夭折(/tmp 全清)。新顺序:先完成解包/
+# 校验/批次 env 等全部慢操作,最后一条命令链内 kill→mv→热启动(空窗 <1s)。
+echo "[3/6] 预解包(不动运行中的 GUI)..."
 tar -zxvf "$LOCAL_TAR" -C /data > /tmp/install_tar.log 2>&1
 if [ ! -f /data/nx5gui ]; then
     echo "[-] 解包断言失败(nx5gui 缺失),中止(旧固件仍在)..."
@@ -171,28 +159,42 @@ if [ -d "$BACKUP_DIR" ]; then
     cp -f "$BACKUP_DIR"/*.json "$CONF_DIR/" 2>/dev/null || true
     rm -rf "$BACKUP_DIR"
 fi
+# 接管脚本准备(落位 /data/bin 在 kill 之后同一链内执行,见下)
+rm -f "$LOCAL_TAR"
+
+echo "[3.6/6] 换血(亚秒空窗:kill→mv→落位→热启动)..."
+for p in $(ps | grep start_app | grep -v grep | awk '{print $1}'); do
+    kill -9 $p 2>/dev/null
+done
+for p in $(ls /proc 2>/dev/null | grep -E '^[0-9]+$'); do
+    e=$(readlink /proc/$p/exe 2>/dev/null)
+    case "$e" in
+        "$TARGET_BIN"|"$TARGET_BIN (deleted)"|"$LEGACY_BIN"|"$LEGACY_BIN (deleted)") kill -9 $p 2>/dev/null ;;
+    esac
+done
 # 清理 ≤1.0.130 的借用名旧二进制(防双实例 flock 冲突),留档 .removed
 [ -f "$LEGACY_BIN" ] && mv -f "$LEGACY_BIN" "${LEGACY_BIN}.removed" 2>/dev/null
 # 接管脚本落位(幂等;已有 start_app.sh.bak 时不覆盖用户备份)
+[ -f /data/bin/start_app.sh ] && cp -f /data/bin/start_app.sh /data/bin/start_app.sh.bak 2>/dev/null
 if [ -f /data/start_app.sh ]; then
     cp -f /data/start_app.sh /data/bin/start_app.sh && chmod +x /data/bin/start_app.sh
     [ -f /data/bin/data_app.sh ] || { printf '# dummy: Sinit 检查 data_app.sh 存在但运行 start_app.sh\n' > /data/bin/data_app.sh; chmod +x /data/bin/data_app.sh; }
     rm -f /data/start_app.sh
 fi
-rm -f "$LOCAL_TAR"
+# 立即热启动(最小化喂狗空窗)
+(
+    cd /data
+    [ -f /data/bin/nx5_env.sh ] && . /data/bin/nx5_env.sh
+    NX5TS_DBG=1 nohup ./nx5gui >> /data/nx5gui_live.log 2>&1 &
+)
+echo "[+] 新 GUI 已热启动"
 
 # curl 持久化(后续 OTA 直连快速通道)
 if [ -x /tmp/curl ] && [ ! -x "$CONF_DIR/curl" ]; then
     cp -f /tmp/curl "$CONF_DIR/curl" 2>/dev/null && chmod +x "$CONF_DIR/curl" 2>/dev/null
 fi
 
-# ---------------------------------------------------------------- 6. 热启动 + 验证(带批次环境)
-echo "[5/6] 热启动 GUI(批次环境: $BATCH)..."
-(
-    cd /data
-    [ -f /data/bin/nx5_env.sh ] && . /data/bin/nx5_env.sh
-    NX5TS_DBG=1 nohup ./nx5gui >> /data/nx5gui_live.log 2>&1 &
-)
+# ---------------------------------------------------------------- 7. 验证
 echo "[6/6] 验证..."
 sleep 5
 GUI_OK=0
@@ -224,3 +226,4 @@ else
     done
     exit 1
 fi
+
