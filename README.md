@@ -41,6 +41,12 @@ for h in "ghfast.top/https://raw.githubusercontent.com/$G/main" \
         break
     fi
 done
+echo " "
+echo "=========================================="
+echo " 若看到此行 = 4 个镜像均下载失败(i.sh 无效)。"
+echo " 请检查设备网络(WiFi/网线)后重试,"
+echo " 或改用下方【离线环境】方式安装。"
+echo "=========================================="
 ```
 
 
