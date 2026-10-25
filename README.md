@@ -12,9 +12,11 @@ Web 控制台 → **设置 → 固件更新**：
 2. **下载**：分块传输 + md5 强校验
 3. **安装**：全量 tar 更新（二进制+脚本+主题）→ md5 强校验 → 自动重启生效
 
-## SSH/telnet 一键安装（新机/恢复用）
+## telnet 一键安装（新机/恢复用）
 
-telnet/SSH 进面板后（root / 123456），**整段粘贴**以下引导脚本执行：
+> 设备只有 **telnet**（无 SSH）：`telnet 192.168.50.x`，登录 root / 123456。
+
+telnet 进面板后，**整段粘贴**以下引导脚本执行：
 
 ```sh
 cd /tmp
@@ -45,25 +47,29 @@ done
 
 **离线环境**（设备不通 GitHub）：PC 从 [Release](https://github.com/snailll2/zero3-firmware/releases/latest) 下载 `nx5gui_latest.tar.gz`，推到设备 `/tmp/`（scp/浏览器均可），重跑上面引导脚本会自动检测本地包跳过下载。
 
-## 劫持的启动链（开机接管原理）
+## 启动链（v9 纯直启,2026-10-26 起）
 
-利用原厂 Sinit 启动钩子的一个笔误：**它检查 `/data/bin/data_app.sh` 是否存在，存在则执行 `/data/bin/start_app.sh`**。我们在这两个位置放上自己的文件即完成开机自启，全程不动 `/system`（只读 squashfs）。
+**双通道自启**，全程不动 `/system`（只读 squashfs）：
 
-开机时序：
+1. **官方分叉点**（产测模式）：`/data/productionTest`（文件）+ `/data/nand-1`（目录）存在时，原厂 `start_app.sh` 的 `user_app_init()` 走产测分支——**lingdong_app.sh 整链不执行**（linkdora_broker / aciga_devinfo / aciga_guardian 均不自启；guardian 不存在 → 原厂 GUI（aciga_lvgl）永不被拉起）。
+2. **Sinit 钩子**：原厂 init 检查 `/data/bin/data_app.sh` 存在则执行 `/data/bin/start_app.sh`（原厂笔误，可利用）——我们的开机总入口。
+
+开机时序（直启）：
 
 ```
-上电 → 原厂系统启动(guardian 拉起原厂 aciga_lvgl,由它点亮面板 MIPI/vo 管线)
-     → Sinit 钩子执行 /data/bin/start_app.sh
-        ├─ 加载 /data/bin/nx5_env.sh(批次环境变量,install.sh 按硬件批次生成)
-        ├─ 等 /system 原厂 GUI 出现 + 背光 PWM duty>0(面板点亮,最多 ~40s)
-        ├─ 启动 /data/nx5gui(不做预冻结——冻结由 GUI 进程内 vendor_keeper
-        │   在启动 ~5s 后按 exe 精确执行:SIGSTOP /system/user/bin/aciga_lvgl,
-        │   fd 全保留 → vo 管线持续供电扫描 → 我们写 fb0 即上屏)
-        └─ 看护循环:GUI 退出 → 解冻原厂 15s(恢复出厂显示)→ 重试 ≤3 次;
-            3 败后解冻原厂留在出厂界面退出(guardian 接手)
+上电 → 原厂 init → start_app.sh 检测到 /data/productionTest → 产测分支(原厂链跳过)
+     → Sinit 钩子执行 /data/bin/start_app.sh (v9)
+        ├─ 加载 /data/bin/nx5_env.sh(批次环境变量)
+        ├─ 移植启动 linkdora_broker(消息总线) + aciga_devinfo(WiFi/背光/gl 硬件)
+        │   (guardian 故意不启——它会复活原厂 GUI;WiFi 凭据自动保护回写)
+        └─ /data/nx5gui
+            ├─ fymedia 媒体栈全协议初始化(sys init → VO SetPubAttr → Enable)
+            ├─ open fb0(fyfb 成功绑定 VO 图层)→ 原厂 logo 直接切换到我们的 UI
+            ├─ GUI 进程内 GPIO83 外部硬看门狗喂狗(新批次)
+            └─ 看护:GUI 退出重试 ≤3 次
 ```
 
-批次环境（`nx5_env.sh`，由 `install.sh` 按 `/system/ko/ioctrl.ko` 的 md5 自动判定）：新批次（163 型，`432548a3*`）开 `NX5_GPIO83FEED=1`（GPIO83 外部硬看门狗喂狗，原厂被冻结后由我们喂）+ `NX5_NOWDT=1`；旧批次（149 型）两者皆空，GUI 自行开 `/dev/watchdog` 喂狗（崩溃→整机复位→原厂自恢复）。
+**接管模式**（备选，`NX5_DIRECT_BOOT` 未设时）：原厂 GUI 先点亮面板 → 我们 SIGSTOP 冻结它（fd 保留、vo 管线继续扫描）→ 写 fb0 上屏。批次环境（`nx5_env.sh`，install.sh 按 ioctrl.ko md5 判定）：新批次（163 型）`NX5_GPIO83FEED=1`+`NX5_NOWDT=1`；旧批次（149 型）GUI 自行开 `/dev/watchdog`。
 
 ## 设备端文件清单
 
@@ -73,6 +79,8 @@ done
 | `/data/bin/start_app.sh` | **开机接管脚本**（Sinit 钩子自动执行，见上节时序） |
 | `/data/bin/data_app.sh` | 哑文件（Sinit 只检查它存在，真正执行的是 start_app.sh） |
 | `/data/bin/nx5_env.sh` | 批次环境变量（install.sh 生成，可手工编辑后重启生效） |
+| `/data/productionTest` | **直启分叉标志**（空文件；存在=原厂走产测分支，原厂 GUI 永不启动） |
+| `/data/nand-1` | **直启分叉标志**（空目录；与上文件配合） |
 | `/data/nx5gui_live.log` | GUI 运行日志（追加式，跨重启保留；排查死亡现场看这里） |
 | `/data/nx5_conf/intercom/` | 用户配置：app/ha/home_layout/license .json + 便携 curl（OTA 直连用） |
 | `/data/theme/theme_default/` | 主题资源（379 文件，Web 编辑器同源） |
@@ -102,7 +110,7 @@ done
 curl -skfL -o /tmp/uninstall.sh https://ghfast.top/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/uninstall.sh && sh /tmp/uninstall.sh
 ```
 
-- 默认:停 GUI + 摘开机链 + 清调试残留,**保留用户配置/授权/主题**,最后重启回出厂
+- 默认:停 GUI + 摘开机链 + **移除直启分叉文件(productionTest/nand-1,恢复原厂启动链)** + 清调试残留,**保留用户配置/授权/主题**,最后重启回出厂
 - `PURGE=1 sh /tmp/uninstall.sh`:连同 nx5_conf(HA 配置+授权!)、主题、备份彻底清除
 - `REBOOT=0 sh /tmp/uninstall.sh`:只清理不重启(面板立即回原厂画面)
 - 安全顺序:先解冻原厂再停 nx5gui(新批次设备外部看门狗需要原厂接管喂狗)

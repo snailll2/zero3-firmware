@@ -51,16 +51,25 @@ if [ -n "$THAWED" ]; then
     done
     echo "[2/5] 原厂 GUI 已解冻($THAWED),恢复出厂显示并接管外部看门狗喂狗"
 else
-    echo "[2/5] ⚠ 未发现运行中的原厂 GUI —— 新批次设备外部看门狗无人喂,"
-    echo "      将在清理后立即重启(重启后原厂自动拉起);不重启必遭硬复位。"
+    echo "[2/5] ⚠ 未发现运行中的原厂 GUI —— 直启模式(原厂本就未跑)或已被冻结方死亡;"
+    echo "      外部看门狗无人喂,将在清理后立即重启(重启后原厂自动拉起);不重启必遭硬复位。"
 fi
 
 # ---------------------------------------------------------------- 3. 摘除开机链
 echo "[3/5] 摘除开机自启链(Sinit 钩子不再拉起)..."
 rm -f /data/bin/start_app.sh /data/bin/start_app.sh.bak \
       /data/bin/data_app.sh   /data/bin/nx5_env.sh \
+      /data/bin/wpa_conf_backup.conf \
       /data/start_app.sh      /data/data_app.sh /data/install.sh 2>/dev/null
 rmdir /data/bin 2>/dev/null || true   # 目录空则一并移除;有其它文件则保留
+# 直启分叉文件(2026-10-26 v9 起):存在则原厂走产测分支、原厂 GUI 永不启动——必须删
+if [ -f /data/productionTest ] || [ -d /data/nand-1 ]; then
+    rm -f /data/productionTest
+    rm -rf /data/nand-1
+    rm -f /data/shim_lvgl /data/shim.log /data/dbt_arm.sh /data/dbt_guard.log 2>/dev/null
+    umount /system/user/bin/aciga_lvgl 2>/dev/null
+    echo "      已移除直启分叉文件(productionTest/nand-1),下次开机恢复原厂启动链"
+fi
 
 # ---------------------------------------------------------------- 4. 清理文件
 echo "[4/5] 清理固件与调试残留..."
