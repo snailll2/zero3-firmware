@@ -35,15 +35,16 @@ for h in "ghfast.top/https://raw.githubusercontent.com/$G/main" \
          "cdn.jsdelivr.net/gh/$G@main" \
          "raw.githubusercontent.com/$G/main"; do
     rm -f i.sh
-    echo "[*] 尝试镜像: $h"
+    echo "[*] try: $h"
     "$C" -skfL -m 10 "https://$h/install.sh" -o i.sh 2>/dev/null
     if [ -s i.sh ]; then
-        echo "[*] 下载成功,开始安装..."
+        echo "[*] download success. start installing ..."
         sh i.sh
         break
     fi
-    echo "[!] 此镜像下载失败,换下一个..."
+    echo "[!] download failed. try next one ..."
 done
+
 ```
 
 

@@ -188,6 +188,15 @@ if [ -f /data/start_app.sh ]; then
     [ -f /data/bin/data_app.sh ] || { printf '# dummy: Sinit 检查 data_app.sh 存在但运行 start_app.sh\n' > /data/bin/data_app.sh; chmod +x /data/bin/data_app.sh; }
     rm -f /data/start_app.sh
 fi
+# ---------------------------------------------------------------- 6.5 直启布防(2026-10-26 起默认)
+# 创建官方产测分叉文件(/data 分区,跨重启):下次开机原厂走产测分支,lingdong_app 整链
+# 不跑(guardian 不存在→原厂 GUI 永不启动),由 start_app.sh v9 + nx5gui fymedia 全协议自点亮。
+# 回退:rm /data/productionTest && rmdir /data/nand-1 && sed 去 NX5_DIRECT_BOOT && reboot
+mkdir -p /data/nand-1 2>/dev/null
+touch /data/productionTest
+grep -q NX5_DIRECT_BOOT /data/bin/nx5_env.sh 2>/dev/null || echo "export NX5_DIRECT_BOOT=1" >> /data/bin/nx5_env.sh
+echo "[+] 直启模式已布防(下次开机原厂 GUI 不再启动,由 nx5gui 自主点亮)"
+
 # 立即热启动(最小化喂狗空窗)
 (
     cd /data
