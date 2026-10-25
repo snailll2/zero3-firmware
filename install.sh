@@ -94,6 +94,9 @@ fi
             echo "[+] 下载并校验成功 ($SZ bytes)"
             break
         fi
+        echo "[!] 此源内容无效,换下一个..."
+    else
+        echo "[!] 此源下载失败,换下一个..."
     fi
 done
 if [ "$DOWNLOAD_OK" -ne 1 ]; then

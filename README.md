@@ -35,18 +35,15 @@ for h in "ghfast.top/https://raw.githubusercontent.com/$G/main" \
          "cdn.jsdelivr.net/gh/$G@main" \
          "raw.githubusercontent.com/$G/main"; do
     rm -f i.sh
+    echo "[*] 尝试镜像: $h"
     "$C" -skfL -m 10 "https://$h/install.sh" -o i.sh 2>/dev/null
     if [ -s i.sh ]; then
+        echo "[*] 下载成功,开始安装..."
         sh i.sh
         break
     fi
+    echo "[!] 此镜像下载失败,换下一个..."
 done
-echo " "
-echo "=========================================="
-echo " 若看到此行 = 4 个镜像均下载失败(i.sh 无效)。"
-echo " 请检查设备网络(WiFi/网线)后重试,"
-echo " 或改用下方【离线环境】方式安装。"
-echo "=========================================="
 ```
 
 

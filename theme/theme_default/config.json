@@ -1,0 +1,330 @@
+{
+    "name": "夏日绘海",
+    "version": 9,
+    "themeId": 6,
+    "appVersion": "2.0.5_1002",
+    "layoutPath": "theme_default/homepage/layout/",
+    "keyPath": "theme_default/homepage/keyboard/",
+    "screenPath": "theme_default/homepage/screen/",
+    "previewPath": "theme_default/preview/",
+    "layout": [
+       {
+            "layoutId": "layout_0a",
+            "attribute": {
+                "widgets_color": [
+                    {
+                        "widgetId": "tile_1",
+                        "color": ""
+                    }
+                ]
+            }
+        },
+        {
+            "layoutId": "layout_1a",
+            "attribute": {
+                "widgets_color": [
+                    {
+                        "widgetId": "tile_1",
+                        "color": ""
+                    },
+                    {
+                        "widgetId": "tile_2",
+                        "color": "1C4262"
+                    }
+                ]
+            }
+        },
+        {
+            "layoutId": "layout_2a",
+            "attribute": {
+                "widgets_color": [
+                    {
+                        "widgetId": "tile_1",
+                        "color": ""
+                    },
+                    {
+                        "widgetId": "tile_2",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_3",
+                        "color": "1C4262"
+                    }
+                ]
+            }
+        },
+        {
+            "layoutId": "layout_3a",
+            "attribute": {
+                "widgets_color": [
+                    {
+                        "widgetId": "tile_1",
+                        "color": ""
+                    },
+                    {
+                        "widgetId": "tile_2",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_3",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_4",
+                        "color": "1C4262"
+                    }
+                ]
+            }
+        },
+        {
+            "layoutId": "layout_3b",
+            "attribute": {
+                "widgets_color": [
+                    {
+                        "widgetId": "tile_1",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_2",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_3",
+                        "color": ""
+                    },
+                    {
+                        "widgetId": "tile_4",
+                        "color": "1C4262"
+                    }
+                ]
+            }
+        },
+        {
+            "layoutId": "layout_4a",
+            "attribute": {
+                "widgets_color": [
+                    {
+                        "widgetId": "tile_1",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_2",
+                        "color": ""
+                    },
+                    {
+                        "widgetId": "tile_3",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_4",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_5",
+                        "color": "1C4262"
+                    }
+                ]
+            }
+        },
+        {
+            "layoutId": "layout_5a",
+            "attribute": {
+                "widgets_color": [
+                    {
+                        "widgetId": "tile_1",
+                        "color": ""
+                    },
+                    {
+                        "widgetId": "tile_2",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_3",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_4",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_5",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_6",
+                        "color": "1C4262"
+                    }
+                ]
+            }
+        },
+        {
+            "layoutId": "layout_6a",
+            "attribute": {
+                "widgets_color": [
+                    {
+                        "widgetId": "tile_1",
+                        "color": ""
+                    },
+                    {
+                        "widgetId": "tile_2",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_3",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_4",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_5",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_6",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_7",
+                        "color": "1C4262"
+                    }
+                ]
+            }
+        },
+        {
+            "layoutId": "layout_7a",
+            "attribute": {
+                "widgets_color": [
+                    {
+                        "widgetId": "tile_1",
+                        "color": ""
+                    },
+                    {
+                        "widgetId": "tile_2",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_3",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_4",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_5",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_6",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_7",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_8",
+                        "color": "1C4262"
+                    }
+                ]
+            }
+        },
+        {
+            "layoutId": "layout_8a",
+            "attribute": {
+                "widgets_color": [
+                    {
+                        "widgetId": "tile_1",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_2",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_3",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_4",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_5",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_6",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_7",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_8",
+                        "color": "1C4262"
+                    }
+                ]
+            }
+        },
+        {
+            "layoutId": "layout_9a",
+            "attribute": {
+                "widgets_color": [
+                    {
+                        "widgetId": "tile_1",
+                        "color": "FFFFFF"
+                    },
+                    {
+                        "widgetId": "tile_2",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_3",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_4",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_5",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_6",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_7",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_8",
+                        "color": "1C4262"
+                    },
+                    {
+                        "widgetId": "tile_9",
+                        "color": "1C4262"
+                    }
+                ]
+            }
+        }
+    ],
+    "style": [
+        {
+            "styleType": "num_clock_color",
+            "hour": "12314A",
+            "minute": "12314A",
+            "date": "12314A",
+            "week": "12314A"
+        },
+        {
+            "styleType": "curtain_rod_px",
+            "px": "5"
+        }
+    ]
+}
