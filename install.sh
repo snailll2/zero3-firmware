@@ -16,6 +16,7 @@ mkdir -p "$CONF_DIR"
 TAR_NAME="nx5gui_latest.tar.gz"
 URL_LIST="
 https://ghfast.top/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/release/${TAR_NAME}
+https://gh-proxy.org/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/release/${TAR_NAME}
 https://cdn.jsdelivr.net/gh/snailll2/zero3-firmware@main/release/${TAR_NAME}
 https://raw.githubusercontent.com/snailll2/zero3-firmware/main/release/${TAR_NAME}
 "

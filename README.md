@@ -31,6 +31,7 @@ if [ -z "$C" ]; then
 fi
 G="snailll2/zero3-firmware"
 for h in "ghfast.top/https://raw.githubusercontent.com/$G/main" \
+         "gh-proxy.org/https://raw.githubusercontent.com/$G/main" \
          "cdn.jsdelivr.net/gh/$G@main" \
          "raw.githubusercontent.com/$G/main"; do
     rm -f i.sh
