@@ -44,7 +44,9 @@ done
 ```
 
 
-引导脚本自动完成：查找/获取 curl（优先上次安装持久化的便携 curl）→ 三镜像拉取主安装脚本 → 主脚本再完成 备份用户配置 → 下载 release 包 → 精确替换固件（原厂 GUI 冻结共存不受影响）→ 热启动 → 验证。
+引导脚本自动完成：查找/获取 curl（优先上次安装持久化的便携 curl）→ 依次尝试 4 个镜像（ghfast → gh-proxy.org → jsdelivr → raw）拉取主安装脚本 → 主脚本再完成 备份用户配置 → 下载 release 包 → 精确替换固件（原厂 GUI 冻结共存不受影响）→ 热启动 → 验证。
+
+> **如果所有镜像都下载失败**（`i.sh` 为空或不存在，脚本无任何输出直接结束）：通常是设备当前网络不通 GitHub 镜像。请检查 WiFi/网线连接后重试；或改用**离线安装**（下方"离线环境"一节）。
 
 **离线环境**（设备不通 GitHub）：PC 从 [Release](https://github.com/snailll2/zero3-firmware/releases/latest) 下载 `nx5gui_latest.tar.gz`，推到设备 `/tmp/`（scp/浏览器均可），重跑上面引导脚本会自动检测本地包跳过下载。
 

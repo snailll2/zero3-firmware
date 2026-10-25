@@ -98,6 +98,9 @@ fi
 done
 if [ "$DOWNLOAD_OK" -ne 1 ]; then
     echo "[-] 所有镜像均无法取得有效 release 包。"
+    echo "    可能原因:设备网络不通/路由器拦截 GitHub 镜像域名。"
+    echo "    处理:①检查 WiFi 或网线连接后重试;②改用离线安装(PC 从 Release 页"
+    echo "    下载 nx5gui_latest.tar.gz 推到设备 /tmp/ 后重跑本脚本,会自动跳过下载)。"
     exit 1
 fi
 
