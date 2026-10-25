@@ -2,7 +2,7 @@
   "version": "1.0.165+20261026",
   "release_date": "2026-10-25",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 3635706,
-  "md5": "deac6fcb10bb8eacc73028cd342d8111",
-  "notes": ["\u7eaf\u76f4\u542f\u4e3a\u9ed8\u8ba4:\u5b89\u88c5\u5373\u5e03\u9632\u76f4\u542f(\u539f\u5382 GUI \u4e0b\u6b21\u5f00\u673a\u4e0d\u518d\u8fd0\u884c,\u7531 nx5gui \u81ea\u4e3b\u70b9\u4eae)", "\u542b v1.0.165 \u5168\u90e8\u4fee\u590d:UDP \u78c1\u8d34 htons/WiFi \u4e09\u9879(\u9884\u586b\u5bc6\u7801+\u5065\u5eb7\u76d1\u62a4+\u51ed\u636e\u4fdd\u62a4)/\u76f4\u542f\u7981\u606f\u5c4f+180s \u5f00\u673a\u5bbd\u9650/web socket CLOEXEC"]
+  "size": 3635535,
+  "md5": "e99aeef8726d8f0eccfa4335b1566397",
+  "notes": ["v1.0.165 \u7ec8\u7248(\u7248\u672c\u53f7\u4e32\u4fee\u590d):OTA \u540e\u7248\u672c\u663e\u793a\u6b63\u786e", "\u542b UDP htons \u4fee\u590d/WiFi \u4e09\u9879/\u76f4\u542f\u9ed8\u8ba4\u7981\u606f\u5c4f+180s \u5bbd\u9650/web socket CLOEXEC/OTA apply \u811a\u672c\u4fdd\u7559 nx5gui \u540d\u4fee\u590d"]
 }
