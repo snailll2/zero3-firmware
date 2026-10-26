@@ -49,9 +49,9 @@
         # 看护职责:GUI 死亡 → 立即把 PWM duty 从 ~0 拉回安全档(白斑=duty≈0 而 LCM
         # 仍亮时灯珠漏电不均,硬件特性;进程死后内核 fyfb 释放会归零 duty)→ 重启 GUI
         PWM="$(ls /sys/class/pwm/pwmchip*/pwm0/duty_cycle 2>/dev/null | head -1)"
-        # 哨兵持有方案(fb0/sys/vo 句柄)已撤回:与 GUI 共开 fyfb 的多开行为未验证,
-        # 曾伴随显示引擎状态损坏(黑屏且重启 GUI 无法恢复,需整机重启)。
-        # 白斑兜底 = 下方 keeper 死亡检测恢复 duty(白斑窗口 ≤5s),安全优先。
+        # 白斑防 = 两层:①emergency_bl(on_crash 内恢复 duty,信号可救的死亡)
+        # ②下方 keeper 死亡检测恢复 duty(kill -9/OOM 等不可自救死亡,窗口 ≤5s)。
+        # fb0 哨兵(第三层)已否决:短测通过但真实运行复现白斑+引擎损坏。
         # 日志轮转:live.log >5MB 时留尾 1MB(2026-10-26 95MB 日志塞爆 157MB /data → ENOSPC 部署截断)
         if [ -f /data/nx5gui_live.log ] && [ "$(wc -c < /data/nx5gui_live.log)" -gt 5000000 ]; then
             tail -c 1000000 /data/nx5gui_live.log > /data/nx5gui_live.tail && mv -f /data/nx5gui_live.tail /data/nx5gui_live.log
@@ -61,6 +61,9 @@
         # 让堆越界当场 abort 留日志指认;PERTURB 用垃圾填充 freed 块放大复现。
         export MALLOC_CHECK_=3
         export MALLOC_PERTURB_=165
+        # fb0 哨兵方案 2026-10-27 实测否决:kill -9 短测 duty 恒定,但真实运行
+        # 后白斑复现+显示引擎损坏(GUI 重启无法恢复)——多开 fyfb 的损坏是
+        # 时序性/累积性的,短测无法暴露。白斑兜底=守护死亡检测恢复 duty(≤5s)。
         TRIES=0
         while [ $TRIES -lt 3 ]; do
             cd /data
@@ -71,12 +74,18 @@
             [ -x /data/zbbridge.sh ] && [ -f /data/nx5_conf/intercom/zb_on ] && (sleep 20; setsid sh /data/zbbridge.sh reset >/data/zb_reset.log 2>&1 &)
             # 常驻看护:活着就一直等;死了→恢复背光→跳出重试
             while :; do
-                sleep 5
+        # 检测间隔 0.3s(复刻原厂 guardian 接力):白斑=duty≈0 而 LCM 亮,
+        # 守护 0.3s 内拉回 20%,可见白斑 ≤0.3s(此后为冻结帧非白斑);
+        # fb0 哨兵方案已实测否决(状态污染),速度接力是正路
+        if command -v usleep >/dev/null 2>&1; then KEP_TICK='usleep 300000'; else KEP_TICK='sleep 1'; fi
+            $KEP_TICK
                 OK=""
                 for p in $(ps | grep nx5gui | grep -v grep | awk '{print $1}'); do
                     case "$(readlink /proc/$p/exe 2>/dev/null)" in /data/*) OK=1;; esac
                 done
                 [ -n "$OK" ] && continue
+                [ -f /data/nx5blpub ] && cp -f /data/nx5blpub /data/bin/nx5blpub && chmod +x /data/bin/nx5blpub && rm -f /data/nx5blpub
+        [ -x /data/bin/nx5blpub ] && /data/bin/nx5blpub 50 >/dev/null 2>&1   # LINKDORA 直发(163 新批次 sysfs 不接背光)
                 [ -n "$PWM" ] && [ -f "$PWM" ] && echo 200000 > "$PWM" 2>/dev/null
                 echo "[start_app] nx5gui died, backlight restored(20%), restarting"
                 break
