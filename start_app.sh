@@ -45,7 +45,22 @@
             echo "[start_app] wifi credentials restored"
         fi
 
-        # GUI 直启(fymedia 全协议在 nx5gui 进程内)
+        # GUI 直启(fymedia 全协议在 nx5gui 进程内)+ 常驻看护
+        # 看护职责:GUI 死亡 → 立即把 PWM duty 从 ~0 拉回安全档(白斑=duty≈0 而 LCM
+        # 仍亮时灯珠漏电不均,硬件特性;进程死后内核 fyfb 释放会归零 duty)→ 重启 GUI
+        PWM="$(ls /sys/class/pwm/pwmchip*/pwm0/duty_cycle 2>/dev/null | head -1)"
+        # 哨兵持有方案(fb0/sys/vo 句柄)已撤回:与 GUI 共开 fyfb 的多开行为未验证,
+        # 曾伴随显示引擎状态损坏(黑屏且重启 GUI 无法恢复,需整机重启)。
+        # 白斑兜底 = 下方 keeper 死亡检测恢复 duty(白斑窗口 ≤5s),安全优先。
+        # 日志轮转:live.log >5MB 时留尾 1MB(2026-10-26 95MB 日志塞爆 157MB /data → ENOSPC 部署截断)
+        if [ -f /data/nx5gui_live.log ] && [ "$(wc -c < /data/nx5gui_live.log)" -gt 5000000 ]; then
+            tail -c 1000000 /data/nx5gui_live.log > /data/nx5gui_live.tail && mv -f /data/nx5gui_live.tail /data/nx5gui_live.log
+        fi
+        # 堆检测(2026-10-26):163 反复静默死亡=主线程 r7(帧指针)被踩,
+        # 内核 Oops(do_sys_open 垃圾指针)后喂狗断→硬件复位。MALLOC_CHECK
+        # 让堆越界当场 abort 留日志指认;PERTURB 用垃圾填充 freed 块放大复现。
+        export MALLOC_CHECK_=3
+        export MALLOC_PERTURB_=165
         TRIES=0
         while [ $TRIES -lt 3 ]; do
             cd /data
@@ -54,15 +69,21 @@
             [ -x /data/btproxy.sh ] && [ -f /data/nx5_conf/intercom/bt_on ] && (sleep 8; /data/btproxy.sh >/dev/null 2>&1 &)
             # Zigbee 网关
             [ -x /data/zbbridge.sh ] && [ -f /data/nx5_conf/intercom/zb_on ] && (sleep 20; setsid sh /data/zbbridge.sh reset >/data/zb_reset.log 2>&1 &)
-            sleep 8
-            OK=""
-            for p in $(ps | grep nx5gui | grep -v grep | awk '{print $1}'); do
-                case "$(readlink /proc/$p/exe 2>/dev/null)" in /data/*) OK=1;; esac
+            # 常驻看护:活着就一直等;死了→恢复背光→跳出重试
+            while :; do
+                sleep 5
+                OK=""
+                for p in $(ps | grep nx5gui | grep -v grep | awk '{print $1}'); do
+                    case "$(readlink /proc/$p/exe 2>/dev/null)" in /data/*) OK=1;; esac
+                done
+                [ -n "$OK" ] && continue
+                [ -n "$PWM" ] && [ -f "$PWM" ] && echo 200000 > "$PWM" 2>/dev/null
+                echo "[start_app] nx5gui died, backlight restored(20%), restarting"
+                break
             done
-            [ -n "$OK" ] && break
             TRIES=$((TRIES+1))
         done
-        echo "[start_app] direct boot done (gui tries=$TRIES)"
+        echo "[start_app] direct boot keeper exited (gui tries=$TRIES)"
         exit 0
     fi
 

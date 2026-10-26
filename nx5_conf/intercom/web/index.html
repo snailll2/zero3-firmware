@@ -426,7 +426,7 @@
     <div class="nav-tabs">
       <button class="tab-btn active" onclick="switchTab('screen', this)">🖥️ 实时监视与触控</button>
       <button class="tab-btn" onclick="switchTab('editor', this)">🎨 排版设计器</button>
-      <button class="tab-btn" onclick="switchTab('ha_config', this)">⚙️ HA 实体与模板</button>
+      <button class="tab-btn" onclick="switchTab('ha_config', this)">🏠 智能家居</button>
       <button class="tab-btn" style="background:rgba(16,185,129,0.12);color:#34d399;" onclick="switchTab('backup', this)">💾 配置备份与恢复</button>
       <button class="tab-btn" style="background:rgba(234,179,8,0.12);color:#facc15;" onclick="switchTab('flight', this)">✈️ 黑匣子诊断</button>
       <button class="tab-btn" onclick="switchTab('terminal', this)">💻 Web 终端</button>
@@ -454,6 +454,56 @@
       /* 合并页:网络卡片搬入设置页后,随打开即加载(原挂在 network tab 激活) */
       initNetworkTab();
       apcLoad();
+async function btLoad(){
+      try{
+        const a = await (await fetch('/api/btproxy', {cache:'no-store'})).json();
+        set('btEnable', a.enabled ? '1' : '0');
+        set('btHost', a.host || ''); set('btUser', a.user || ''); set('btPass', a.pass || '');
+        const st = document.getElementById('btProxyState');
+        const running = a.running ? '运行中' : (a.enabled ? '已启用(未运行!)' : '未启用');
+        st.textContent = running + (a.gateway_mac ? (' · ' + a.gateway_mac) : '');
+        st.style.color = a.running ? '#34d399' : (a.enabled ? '#f59e0b' : '#94a3b8');
+        if (a.forwarded) document.getElementById('btProxyInfo').textContent =
+          'BLE 广播经 MQTT 转发至 Home Assistant。已转发广播:' + a.forwarded + ' 条。';
+        btDirtyFlag = false;
+      }catch(e){ console.warn('btLoad', e); }
+    }
+async function btSave(){
+      const body = { enabled: gv('btEnable') === '1',
+                     host: gv('btHost').trim(), user: gv('btUser').trim(), pass: gv('btPass') };
+      try{
+        const r = await (await fetch('/api/btproxy', {method:'POST',
+          headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)})).json();
+        const st = document.getElementById('btProxyState');
+        if (r.ok){ st.textContent = r.applied ? '已应用' : '已保存'; st.style.color = '#34d399'; }
+        else { st.textContent = '保存失败: ' + (r.error || '?'); st.style.color = '#f43f5e'; }
+        setTimeout(btLoad, 1500);
+      }catch(e){ alert('保存失败: ' + e); }
+    }
+async function zbLoad(){
+      try{
+        const a = await (await fetch('/api/zigbee', {cache:'no-store'})).json();
+        set('zbEnable', a.enabled ? '1' : '0');
+        const st = document.getElementById('zbGwState');
+        const running = a.running ? '运行中' : (a.enabled ? '启动中…' : '未启用');
+        st.textContent = running + ' · 端口 ' + (a.port || 8899);
+        st.style.color = a.running ? '#34d399' : (a.enabled ? '#f59e0b' : '#94a3b8');
+        document.getElementById('zbHint').value = 'tcp://' + location.hostname + ':' + (a.port || 8899);
+        if (!a.installed) { st.textContent = '未安装'; st.style.color = '#f43f5e'; }
+        if (a.enabled && !a.running) setTimeout(zbLoad, 5000);   /* 启动中:5s 轮询 */
+      }catch(e){ console.warn('zbLoad', e); }
+    }
+async function zbSave(){
+      const body = { enabled: gv('zbEnable') === '1' };
+      try{
+        const r = await (await fetch('/api/zigbee', {method:'POST',
+          headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)})).json();
+        const st = document.getElementById('zbGwState');
+        if (r.ok){ st.textContent = body.enabled ? '启动中…(约 1 分钟)' : '已关闭'; st.style.color = body.enabled ? '#f59e0b' : '#94a3b8'; }
+        else { st.textContent = '失败: ' + (r.error || '?'); st.style.color = '#f43f5e'; }
+        setTimeout(zbLoad, body.enabled ? 8000 : 1500);
+      }catch(e){ alert('保存失败: ' + e); }
+    }
       btLoad(); zbLoad();
     }
     /* ---- NX5 精简模式(默认启用):隐藏暂不支持功能的编辑入口 ----
@@ -1005,11 +1055,11 @@
     <!-- Tab 3: HA Dynamic Cards Manager -->
     <div id="tab-ha_config" class="tab-content">
       <!-- Home Assistant Server & Token Config Card -->
-      <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg, rgba(30,58,138,0.25), rgba(15,23,42,0.7));border:1px solid rgba(56,189,248,0.3);">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div class="card" style="margin-bottom:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
           <div>
             <h3 style="font-size:16px;font-weight:600;color:#f8fafc;display:flex;align-items:center;gap:8px;">
-              <span>🏠</span> Home Assistant 服务连接设置
+              <span><svg t="1793007835916" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="12660" width="18" height="18"><path d="M0.189155 0.189155h1023.638886v1023.62169H0.189155V0.189155zM917.368083 551.6452a19.03588601 19.03588601 0 0 0-5.347932-11.469681l-85.10262101-87.252111v-137.51579401a15.923424 15.923424 0 0 0-15.923424-15.92342499h-66.34186999a15.923424 15.923424 0 0 0-15.923424 15.92342501v37.45272L528.91218999 150.619087l-0.24074299-0.257939a23.902333 23.902333 0 0 0-33.789988 0.292331L111.962653 540.055148a19.22504201 19.22504201 0 0 0-5.382324 11.521268v3.748711a19.12186599 19.12186599 0 0 0 19.01869 17.19592301h71.139532v273.63871799a15.94062 15.94062 0 0 0 15.923425 15.923424h598.33212999a15.923424 15.923424 0 0 0 15.923424-15.923424V572.55544201h71.43186301a19.12186599 19.12186599 0 0 0 19.01869-17.19592301v-3.714319z m-298.022536-39.72258201a30.67752601 30.67752601 0 1 0-14.461771 14.51335901l44.05595399 44.21071699v42.90382701l-55.23330299 55.422459v-40.685553a30.69472199 30.69472199 0 1 0-20.463148 0v61.148701l-51.140674 51.364221V439.252649l41.992443-42.164402a30.79789801 30.79789801 0 1 0-14.461771-14.513359l-37.83103 37.83102999-37.83103-37.83102999a30.67752601 30.67752601 0 1 0-14.46177101 14.513359l42.00963901 42.164402v215.292952l-73.650137-73.94246699v-59.06799501a30.69472199 30.69472199 0 1 0-20.463148 0v38.55325901l-57.27961801-57.48597001v-57.038875a30.67752601 30.67752601 0 1 0-20.463148 0v65.55085701l63.28099501 63.50454199h-36.266201a30.815093 30.815093 0 1 0 0 20.514736h56.849721l88.111908 88.438631v153.697157l-47.048045-47.220004v-59.10238601a30.69472199 30.69472199 0 1 0-20.463148 0v38.57045401l-68.456968-68.783691a30.67752601 30.67752601 0 1 0-27.702632 17.50545 30.453979 30.453979 0 0 0 13.240861-2.992091l68.456968 68.697711h-36.386572a30.79789801 30.79789801 0 1 0 0 20.531932h56.832524l57.296815 57.48597h28.975129l59.325934-59.532285h54.803405a30.79789801 30.79789801 0 1 0 0-20.531931h-63.280995l-55.026953 55.284891v-67.373625l65.602445-65.843188h105.94408a30.79789801 30.79789801 0 1 0 0-20.531932h-85.58410701l61.217484-61.458227v-51.32982999l44.05595401-44.21071701a30.385195 30.385195 0 0 0 13.240861 3.009287 30.76350599 30.76350599 0 1 0-27.702632-17.52264599l-29.59418301 29.69735899V447.609868a30.69472199 30.69472199 0 1 0-20.445952 0v94.010109l-29.59418299-29.69735899zM354.42516201 806.626341a12.329477 12.329477 0 1 0-12.27788802-12.329476 12.312281 12.312281 0 0 0 12.277888 12.329476z m90.020656-92.393692a12.329477 12.329477 0 1 0-12.27788901-12.329477 12.312281 12.312281 0 0 0 12.27788901 12.329477z m-106.39117401-14.375792a12.329477 12.329477 0 1 0-12.277889-12.329476 12.312281 12.312281 0 0 0 12.277889 12.329476z m-10.31755399-102.659658a12.329477 12.329477 0 1 0-12.260692-12.32947699 12.295085 12.295085 0 0 0 12.260692 12.32947699z m255.73776299 14.37579101a12.329477 12.329477 0 1 0-12.277889-12.329476 12.312281 12.312281 0 0 0 12.277889 12.329476z m139.115014 94.440008a12.329477 12.329477 0 1 0-12.27788899-12.31228101 12.295085 12.295085 0 0 0 12.27788899 12.31228101z m-53.18698899 98.54983299a12.329477 12.329477 0 1 0-12.277888-12.31228099 12.295085 12.295085 0 0 0 12.277888 12.31228099z m57.27961899-293.603184a12.329477 12.329477 0 1 0-12.277889-12.31228099 12.295085 12.295085 0 0 0 12.277889 12.31228099z m-67.511193-80.064216a12.329477 12.329477 0 1 0-12.277888-12.32947699 12.312281 12.312281 0 0 0 12.277888 12.32947699z m-81.835396-49.283515a12.329477 12.329477 0 1 0-12.277889-12.31228 12.295085 12.295085 0 0 0 12.277889 12.31228z m-130.929755 0a12.329477 12.329477 0 1 0-12.277889-12.31228 12.295085 12.295085 0 0 0 12.277889 12.31228z m-106.391174 47.220004a12.329477 12.329477 0 1 0-12.27788899-12.312281 12.295085 12.295085 0 0 0 12.27788899 12.312281z m77.74276701 75.97158601a12.329477 12.329477 0 1 0-12.27788901-12.31228 12.295085 12.295085 0 0 0 12.27788901 12.31228z m173.97114999 6.15614099a12.329477 12.329477 0 1 0-12.277889-12.31228099 12.295085 12.295085 0 0 0 12.277889 12.31228099z" fill="#00A0E9" p-id="12661"></path></svg></span> Home Assistant 服务连接设置
             </h3>
             <span style="font-size:12px;color:#94a3b8;">配置您的 Home Assistant 服务器局域网地址与长期访问令牌（配置动态保存至中控，无需写死）</span>
           </div>
@@ -1033,35 +1083,206 @@
         <div style="border-top:1px solid rgba(56,189,248,0.2);padding-top:12px;margin-top:10px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
             <div style="font-size:13px;font-weight:600;color:#38bdf8;display:flex;align-items:center;gap:6px;">
-              <span>🤖 对讲机自动暴露给 HA 的实体</span>
-              <span class="badge" style="background:#065f46;color:#6ee7b7;font-size:11px;">经内置 HA 守护进程同步</span>
+              <span> 本机自动暴露给 HA 的实体</span>
+              <span class="badge" style="background:#065f46;color:#6ee7b7;font-size:11px;">经内置实体引擎双向同步</span>
             </div>
           </div>
           <div style="font-size:12px;color:#94a3b8;line-height:1.8;">
-            <code style="color:#38bdf8;">sensor.leelen_call_state</code> 呼叫状态 ·
-            <code style="color:#38bdf8;">switch.leelen_unlock</code> 远程开锁 ·
-            <code style="color:#38bdf8;">switch.leelen_dnd</code> 免扰 ·
-            <code style="color:#38bdf8;">sensor.leelen_key_event</code> 按键事件 ·
-            <code style="color:#38bdf8;">camera.*</code> 镜头实体。<br>
-            下方卡片即为对讲机屏上 Dashboard 的设备卡片,可添加/排序/改类型。
+            <code style="color:#38bdf8;">sensor.panel_screen_state</code> 屏幕状态(开/息屏) ·
+            <code style="color:#38bdf8;">number.panel_brightness</code> 屏幕亮度(0-100) ·
+            面板自身属性可直接在 HA 自动化中使用。
           </div>
         </div>
       </div>
 
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
-        <div>
-          <h2 style="font-size:18px;">📱 对讲机屏上 Dashboard 设备卡片</h2>
-          <span style="font-size:13px;color:var(--text-muted);" id="cardsSummary">正在读取已配置卡片...</span>
+      <!-- 米家账号(云直连)卡片 -->
+      <!-- 米家账号(云直连)卡片 -->
+      <div class="card" style="margin-bottom:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div>
+            <h3 style="font-size:16px;font-weight:600;color:#f8fafc;">
+              <svg t="1793007753834" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="10702" width="18" height="18"><path d="M716.8 0c169.664 0 307.2 137.536 307.2 307.2v409.6c0 169.664-137.536 307.2-307.2 307.2H307.2C137.536 1024 0 886.464 0 716.8V307.2C0 137.536 137.536 0 307.2 0h409.6zM529.6128 320.5248H228.608a4.2368 4.2368 0 0 0-4.1984 4.2752v372.608a4.224 4.224 0 0 0 4.1984 4.2496h80.4096c2.3168 0 4.1984-1.92 4.1984-4.288V404.928c0-2.368 1.8816-4.3008 4.1984-4.3008h172.9024c32.4736 0 58.8032 27.008 58.8032 60.3008v236.4416c0 2.368 1.8816 4.288 4.1856 4.288h79.232a4.224 4.224 0 0 0 4.1728-4.2752V430.3872c0-60.672-47.936-109.8624-107.0848-109.8624zM470.144 468.992h-80.384a4.2496 4.2496 0 0 0-4.1984 4.3008v224.0896c0 2.3808 1.8688 4.288 4.1984 4.288h80.384c1.1136 0 2.176-0.448 2.9568-1.2416a4.3392 4.3392 0 0 0 1.2288-3.0464V473.28a4.352 4.352 0 0 0-1.2288-3.0464 4.1344 4.1344 0 0 0-2.9568-1.2544z m321.4336-148.4416h-80.3584c-2.3296 0-4.224 1.92-4.224 4.3008v372.5312c0 2.3808 1.8944 4.288 4.224 4.288h80.3584c2.3296 0 4.2112-1.92 4.2112-4.288V324.8384a4.352 4.352 0 0 0-1.2288-3.0464 4.1472 4.1472 0 0 0-2.9824-1.2544z" fill="#FF6A00" p-id="10703"></path></svg>
+              米家账号(MIoT 云直连)
+            </h3>
+            <span style="font-size:12px;color:#94a3b8;">米家设备不经 HA 直连控制,登录后自动进入实体选择器与首页磁贴</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <span id="mijiaBadge" style="font-size:12px;padding:3px 10px;border-radius:9999px;"></span>
+            <button class="btn-primary" style="padding:7px 14px;font-size:13px;" onclick="mijiaLogin()">📱 登录小米账号</button>
+            <button class="btn-secondary" style="padding:7px 14px;font-size:13px;" onclick="loadMijiaStatus()">🔄 刷新</button>
+          </div>
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-          <button class="btn-secondary" style="border-color:#f43f5e;color:#fda4af;" onclick="clearAllCards()">🗑️ 清空所有卡片</button>
-          <button class="btn-secondary" onclick="openDiscoveryModal()">🔍 发现并添加 HA 设备</button>
-          <button class="btn-primary" onclick="saveCardsConfig()">💾 保存并推送到开关屏幕</button>
+        <div id="mijiaStatus" style="font-size:13px;color:#38bdf8;">读取中…</div>
+        <div style="display:flex;gap:8px;margin-top:10px;align-items:center;">
+          <input id="mijiaCode" placeholder="授权后浏览器会跳到打不开的页面——把地址栏完整链接粘贴到这里(自动提取 code)"
+                 style="flex:1;background:#0b1220;border:1px solid #1e293b;border-radius:8px;padding:8px 10px;color:#e2e8f0;font-size:12px;">
+          <button class="btn-secondary" style="padding:7px 14px;font-size:13px;" onclick="mijiaCodeSubmit()">✅ 提交授权</button>
+        </div>
+      </div>
+      <script>
+      async function mijiaCodeSubmit(){
+        const v = document.getElementById('mijiaCode').value.trim();
+        if (!v) { showToast('⚠️ 请先粘贴授权后地址栏里的完整链接', true); return; }
+        try{
+          const r = await (await fetch('/api/mijia/code', { method:'POST',
+            headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code: v }) })).json();
+          if (r.ok) { showToast('✅ 米家授权成功'); document.getElementById('mijiaCode').value = ''; }
+          else showToast('❌ 授权失败: ' + (r.err || '未知错误'), true);
+          loadMijiaStatus();
+        }catch(e){ showToast('❌ 提交失败', true); }
+      }
+      async function loadMijiaStatus(){
+        try{
+          const r = await (await fetch('/api/mijia/status')).json();
+          const el = document.getElementById('mijiaStatus');
+          const bd = document.getElementById('mijiaBadge');
+          if (r.configured) {
+            const d = new Date((r.expires_ts || 0) * 1000);
+            el.textContent = `已连接 · ${r.devices} 个实体 · 凭据至 ${d.toLocaleDateString()}`;
+            el.style.color = '#34d399';
+            bd.textContent = '✅ 已连接'; bd.style.background = 'rgba(52,211,153,0.15)'; bd.style.color = '#34d399';
+          } else {
+            el.textContent = '未登录(点击「登录小米账号」完成授权)';
+            el.style.color = '#94a3b8';
+            bd.textContent = '未连接'; bd.style.background = 'rgba(148,163,184,0.12)'; bd.style.color = '#94a3b8';
+          }
+        }catch(e){ document.getElementById('mijiaStatus').textContent = '读取失败'; }
+      }
+      loadMijiaStatus();
+      setInterval(loadMijiaStatus, 30000);   /* 30s 自动刷新 */
+      async function mijiaLogin(){
+        try{
+          const r = await (await fetch('/api/mijia/oauth/url')).json();
+          window.open(r.url, '_blank',
+            'width=480,height=720,left=200,top=100');
+        }catch(e){ alert('获取授权链接失败'); }
+      }
+      // ===== 蓝牙代理 / Zigbee =====
+      async function loadBtProxy(){
+        try{
+          const r = await (await fetch('/api/btproxy')).json();
+          document.getElementById('btHost').value = r.host || '';
+          document.getElementById('btUser').value = r.user || '';
+          document.getElementById('btPass').value = r.pass || '';
+          document.getElementById('btEnabled').checked = !!r.enabled;
+          btSw();
+          const bd = document.getElementById('btBadge');
+          bd.textContent = r.running ? '● 运行中' : (r.enabled ? '○ 已配置未运行' : '未启用');
+          bd.style.background = r.running ? 'rgba(52,211,153,0.15)' : 'rgba(148,163,184,0.12)';
+          bd.style.color = r.running ? '#34d399' : '#94a3b8';
+        }catch(e){}
+      }
+      async function saveBtProxy(){
+        const body = { enabled: document.getElementById('btEnabled').checked ? 1 : 0,
+          host: document.getElementById('btHost').value.trim(),
+          user: document.getElementById('btUser').value.trim(),
+          pass: document.getElementById('btPass').value };
+        if (body.enabled && (!body.host || !body.user)) {
+          showToast('⚠️ 启用蓝牙代理需要先填写 MQTT 服务器与用户名', true);
+          document.getElementById('btEnabled').checked = false; btSw();
+          return;
+        }
+        /* host 支持 "ip:port" 合写:后端自动拆分存 BTMQTT_PORT */
+        const r = await (await fetch('/api/btproxy', { method:'POST',
+          headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })).json();
+        if (r.ok) showToast('✅ 蓝牙代理配置已保存并应用');
+        else showToast('❌ 保存失败: ' + (r.err || '未知错误'), true);
+        loadBtProxy();
+      }
+      async function loadZigbee(){
+        try{
+          const r = await (await fetch('/api/zigbee')).json();
+          document.getElementById('zbEnabled').checked = !!r.enabled;
+          zbSw();
+          const bd = document.getElementById('zbBadge');
+          bd.textContent = r.running ? '● 运行中' : (r.enabled ? '○ 已启用未运行' : '未启用');
+          bd.style.background = r.running ? 'rgba(52,211,153,0.15)' : 'rgba(148,163,184,0.12)';
+          bd.style.color = r.running ? '#34d399' : '#94a3b8';
+        }catch(e){}
+      }
+      async function saveZigbee(){
+        const body = { enabled: document.getElementById('zbEnabled').checked ? 1 : 0 };
+        const r = await (await fetch('/api/zigbee', { method:'POST',
+          headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })).json();
+        if (r.ok) showToast('✅ Zigbee 配置已保存并应用');
+        else showToast('❌ 保存失败: ' + (r.err || '未知错误'), true);
+        loadZigbee();
+      }
+      function swUI(on, track, knob) {
+        document.getElementById(track).style.background = on ? '#10B981' : '#334155';
+        const kn = document.getElementById(knob);
+        kn.style.background = on ? '#fff' : '#94a3b8';
+        kn.style.transform = on ? 'translateX(24px)' : 'translateX(0)';
+      }
+      function btSw(){ swUI(document.getElementById('btEnabled').checked, 'btTrack', 'btKnob'); }
+      function zbSw(){ swUI(document.getElementById('zbEnabled').checked, 'zbTrack', 'zbKnob'); }
+      /* 本 script 位于对应卡片 DOM 之前:直接 getElementById 得 null 并
+       * TypeError,整段崩掉(开关/加载全死)——统一挂 DOMContentLoaded */
+      document.addEventListener('DOMContentLoaded', function(){
+        document.getElementById('btEnabled').addEventListener('change', e => { btSw(); saveBtProxy(); });
+        document.getElementById('zbEnabled').addEventListener('change', e => { zbSw(); saveZigbee(); });
+        loadBtProxy(); loadZigbee();
+      });
+      </script>
+
+      <!-- 蓝牙代理配置卡 -->
+      <div class="card" style="margin-bottom:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div>
+            <h3 style="font-size:16px;font-weight:600;color:#f8fafc;">
+              <svg t="1793007485128" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1697" width="18" height="18"><path d="M762.88 976.512H258.56c-114.56 0-207.36-92.8-207.36-207.36V264.704c0-114.56 92.8-207.36 207.36-207.36h504.32c114.56 0 207.36 92.8 207.36 207.36v504.448c0 114.56-92.8 207.36-207.36 207.36z" fill="#0079F5" p-id="1698"></path><path d="M671.488 385.024L512.896 228.736c-12.672-12.544-34.176-3.456-34.176 14.336V439.168l-100.096-93.952c-1.408-1.408-3.712-1.28-5.12 0.128l-28.544 30.336c-1.408 1.408-1.28 3.712 0.128 5.12l133.632 125.44v18.816l-133.504 124.16c-1.408 1.408-1.536 3.712-0.128 5.12l28.416 30.464c1.408 1.408 3.712 1.536 5.12 0.128l100.224-93.184v198.912c0 17.792 21.504 26.88 34.176 14.336L671.488 648.96c7.936-7.808 7.936-20.736 0-28.672L581.12 531.328c-7.936-7.808-7.936-20.736 0-28.672l90.368-89.088c8.064-7.808 8.064-20.736 0-28.544z m-143.872-73.088l87.552 86.272-87.04 80.896-0.512-0.512V311.936z m0 243.328l1.664-1.536 86.656 81.28-88.192 86.912V555.264z" fill="#FFFFFF" p-id="1699"></path></svg>
+               蓝牙代理(BLE → MQTT)
+            </h3>
+            <span style="font-size:12px;color:#94a3b8;">面板蓝牙芯片经 MQTT 桥接 BLE 设备(米家蓝牙温湿度计等)</span>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <span id="btBadge" style="font-size:12px;padding:3px 10px;border-radius:9999px;"></span>
+            <label style="position:relative;display:inline-block;width:52px;height:28px;margin:0;cursor:pointer;" title="启用/停用蓝牙代理">
+              <input type="checkbox" id="btEnabled" style="opacity:0;width:0;height:0;">
+              <span id="btTrack" style="position:absolute;inset:0;background:#334155;border-radius:9999px;transition:.3s;"></span>
+              <span id="btKnob" style="position:absolute;top:3px;left:3px;width:22px;height:22px;background:#94a3b8;border-radius:50%;transition:.3s;"></span>
+            </label>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px;margin-bottom:12px;">
+          <div class="form-group" style="margin-bottom:0;"><label class="form-label" style="font-size:12px;">MQTT 服务器(IP:端口,默认 1883 可省略)</label>
+            <input id="btHost" class="form-input" placeholder="例如 192.168.50.130:1883" style="font-family:monospace;font-size:13px;"></div>
+          <div class="form-group" style="margin-bottom:0;"><label class="form-label" style="font-size:12px;">用户名</label>
+            <input id="btUser" class="form-input" style="font-family:monospace;font-size:13px;"></div>
+          <div class="form-group" style="margin-bottom:0;"><label class="form-label" style="font-size:12px;">密码</label>
+            <input id="btPass" type="password" class="form-input" style="font-family:monospace;font-size:13px;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:12px;color:#64748b;">启用开关拨动立即生效;地址/账号/密码修改后点保存应用。凭据保留,重开无需重填。</div>
+          <button class="btn-primary" style="padding:7px 16px;font-size:13px;" onclick="saveBtProxy()">💾 保存蓝牙代理</button>
         </div>
       </div>
 
-      <div id="cardsContainer" class="pages-grid"></div>
+      <!-- Zigbee 代理配置卡 -->
+      <div class="card" style="margin-bottom:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div>
+            <h3 style="font-size:16px;font-weight:600;color:#f8fafc;">
+              <svg t="1793007686464" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3518" width="18" height="18"><path d="M222.354286 297.691429a43.373714 43.373714 0 0 0-10.386286 5.193142 359.789714 359.789714 0 0 0-65.097143 209.188572c0 47.981714 9.142857 94.573714 27.428572 139.702857s44.617143 84.845714 78.848 119.149714a355.474286 355.474286 0 0 0 119.149714 78.848c45.129143 18.285714 91.721143 27.428571 139.702857 27.428572a363.885714 363.885714 0 0 0 274.285714-123.465143l-90.843428 8.557714a1512.594286 1512.594286 0 0 1-305.152 3.437714c-26.331429 0-51.419429-5.705143-75.410286-17.115428a110.08 110.08 0 0 1-39.497143-32.621714 84.845714 84.845714 0 0 1-17.115428-46.299429c0-5.705143 2.267429-10.825143 6.875428-15.36l358.253714-372.077714v-5.12H469.138286c-83.382857 2.194286-165.741714 9.142857-246.857143 20.48v0.146285z m587.922285 414.939428a54.637714 54.637714 0 0 0 10.24-3.437714A366.08 366.08 0 0 0 877.202286 512c0-47.981714-9.142857-94.573714-27.428572-139.702857a355.620571 355.620571 0 0 0-78.848-119.222857A355.620571 355.620571 0 0 0 651.702857 174.372571a373.248 373.248 0 0 0-141.385143-27.428571c-49.152 0-96.036571 9.435429-140.580571 28.233143a369.078857 369.078857 0 0 0-118.345143 79.725714h10.24A1819.355429 1819.355429 0 0 1 606.354286 242.834286c34.304 0 68.022857 6.290286 101.156571 18.870857 16.018286 6.875429 29.696 17.408 41.179429 31.670857 11.410286 14.336 17.700571 30.573714 18.870857 48.859429a23.259429 23.259429 0 0 1-6.875429 17.188571L428.032 702.171429l-25.746286 27.428571v3.437714h150.893715a2435.949714 2435.949714 0 0 0 257.097142-20.553143z" fill="#498FFF" p-id="3519"></path></svg>
+              Zigbee 代理(Zigbee → HA)</h3>
+            <span style="font-size:12px;color:#94a3b8;">面板 Zigbee 芯片直连 HA(Zigbee2MQTT/ZA2M 经串口接管)</span>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <span id="zbBadge" style="font-size:12px;padding:3px 10px;border-radius:9999px;"></span>
+            <label style="position:relative;display:inline-block;width:52px;height:28px;margin:0;cursor:pointer;" title="启用/停用 Zigbee 网关">
+              <input type="checkbox" id="zbEnabled" style="opacity:0;width:0;height:0;">
+              <span id="zbTrack" style="position:absolute;inset:0;background:#334155;border-radius:9999px;transition:.3s;"></span>
+              <span id="zbKnob" style="position:absolute;top:3px;left:3px;width:22px;height:22px;background:#94a3b8;border-radius:50%;transition:.3s;"></span>
+            </label>
+          </div>
+        </div>
+        <div style="font-size:13px;color:#94a3b8;margin-bottom:8px;">启用后面板作为 Zigbee 网关(需在 HA 侧配置 Zigbee2MQTT 串口指向面板);启动约 1 分钟(NCP 复位+蓝牙链自恢复)。</div>
+        <div style="font-size:12px;color:#64748b;margin-top:8px;">提示:重置模式(GPIO81 复位 NCP)仅在 NCP 被污染时使用——面板 telnet 执行 <code style="color:#38bdf8;">sh /data/zbbridge.sh reset</code></div>
+      </div>
+
     </div>
+      
+
 
     
     <!-- Discovery / entity picker modal (kept OUTSIDE tab-content so it overlays any active tab) -->
@@ -1115,6 +1336,7 @@
     <!-- Tab 4: Settings -->
     <div id="tab-settings" class="tab-content">
       <div class="control-panel">
+
         <div class="glass-card" id="licenseCard">
           <div class="card-title"><span>🔑 固件授权</span><span id="licenseBadge" style="font-size:12px;padding:3px 10px;border-radius:9999px;"></span></div>
           <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
@@ -1167,54 +1389,6 @@
             </div>
           </div>
           <div style="font-size:11px;color:#94a3b8;margin-top:8px;">改动即时生效并保存到设备(息屏=真关背光;屏保=待机画面保持亮屏;主题改变会重建全部界面)</div>
-        </div>
-        <div class="glass-card">
-          <div class="card-title"><span>📶 蓝牙代理(BLE → Home Assistant)</span><span id="btProxyState" style="font-size:12px;color:#34d399;"></span></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-            <div class="form-group">
-              <label class="form-label">启用蓝牙代理</label>
-              <select id="btEnable" class="form-select" onchange="btSave()">
-                <option value="0">关闭</option><option value="1">开启</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">MQTT Broker 地址</label>
-              <input id="btHost" class="form-input" placeholder="192.168.50.130" oninput="btDirty()" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">MQTT 用户名</label>
-              <input id="btUser" class="form-input" placeholder="用户名" oninput="btDirty()" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">MQTT 密码</label>
-              <input id="btPass" type="password" class="form-input" placeholder="密码" oninput="btDirty()" />
-            </div>
-          </div>
-          <div id="btProxyInfo" style="font-size:11px;color:#94a3b8;margin-top:8px;line-height:1.7;">BLE 广播经 MQTT 转发至 Home Assistant(主题 btproxy/adv/<面板MAC> 与 btproxy/status 心跳)。保存后自动应用/重启代理。</div>
-          <div style="display:flex;gap:10px;margin-top:10px;">
-            <button class="btn-secondary" onclick="btSave()">💾 保存并应用</button>
-            <button class="btn-secondary" onclick="btLoad()">🔄 刷新状态</button>
-          </div>
-        </div>
-        <div class="glass-card">
-          <div class="card-title"><span>📡 Zigbee 网关(Zigbee2MQTT 接入)</span><span id="zbGwState" style="font-size:12px;color:#94a3b8;"></span></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-            <div class="form-group">
-              <label class="form-label">启用 Zigbee 网关</label>
-              <select id="zbEnable" class="form-select" onchange="zbSave()">
-                <option value="0">关闭</option><option value="1">开启</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Z2M 连接地址</label>
-              <input id="zbHint" class="form-input" readonly />
-            </div>
-          </div>
-          <div id="zbGwInfo" style="font-size:11px;color:#94a3b8;margin-top:8px;line-height:1.7;">开启后 Zigbee2MQTT 用串口 tcp://&lt;面板IP&gt;:8899(adapter: ezsp)接入面板内置 Zigbee 芯片。开启约需 1 分钟(含蓝牙链路自动恢复),期间蓝牙代理短暂中断。</div>
-          <div style="display:flex;gap:10px;margin-top:10px;">
-            <button class="btn-secondary" onclick="zbSave()">💾 保存并应用</button>
-            <button class="btn-secondary" onclick="zbLoad()">🔄 刷新状态</button>
-          </div>
         </div>
         <div class="glass-card">
           <div class="card-title"><span>⬆️ 系统更新</span><span id="otaCurVer" style="font-size:12px;color:var(--text-muted);"></span></div>
@@ -4590,6 +4764,7 @@
     }
 
     function loadCards() {
+      /* Dashboard 设备卡片 UI 已移除(2026-10-26);g_cards 仍加载供其它模块(排版设计器引用) */
       fetch('/api/cards')
         .then(res => res.json())
         .then(cards => {
@@ -4624,6 +4799,7 @@
     function renderCards() {
       const container = document.getElementById('cardsContainer');
       const summary = document.getElementById('cardsSummary');
+      if (!container) return;   /* Dashboard 设备卡片区块已移除(2026-10-26),保留函数防他处引用 */
       summary.innerText = `已配置 ${g_cards.length} 个 HA 设备卡片 (统一汇总于滑动最后一屏『HA 设备列表』并可弹窗交互)`;
 
       if (g_cards.length === 0) {
@@ -5181,7 +5357,7 @@
     /* 蓝牙代理:读写 /api/btproxy(开关+MQTT 配置;保存即重写 /data/btproxy.conf 并重启 btproxy) */
     let btDirtyFlag = false;
     function btDirty(){ btDirtyFlag = true; }
-    async function btLoad(){
+async function btLoad(){
       try{
         const a = await (await fetch('/api/btproxy', {cache:'no-store'})).json();
         set('btEnable', a.enabled ? '1' : '0');
@@ -5195,7 +5371,7 @@
         btDirtyFlag = false;
       }catch(e){ console.warn('btLoad', e); }
     }
-    async function btSave(){
+async function btSave(){
       const body = { enabled: gv('btEnable') === '1',
                      host: gv('btHost').trim(), user: gv('btUser').trim(), pass: gv('btPass') };
       try{
@@ -5207,9 +5383,8 @@
         setTimeout(btLoad, 1500);
       }catch(e){ alert('保存失败: ' + e); }
     }
-
     /* Zigbee 网关:读写 /api/zigbee(开关;开启异步 ~1min,轮询 running) */
-    async function zbLoad(){
+async function zbLoad(){
       try{
         const a = await (await fetch('/api/zigbee', {cache:'no-store'})).json();
         set('zbEnable', a.enabled ? '1' : '0');
@@ -5222,7 +5397,7 @@
         if (a.enabled && !a.running) setTimeout(zbLoad, 5000);   /* 启动中:5s 轮询 */
       }catch(e){ console.warn('zbLoad', e); }
     }
-    async function zbSave(){
+async function zbSave(){
       const body = { enabled: gv('zbEnable') === '1' };
       try{
         const r = await (await fetch('/api/zigbee', {method:'POST',
@@ -5233,7 +5408,6 @@
         setTimeout(zbLoad, body.enabled ? 8000 : 1500);
       }catch(e){ alert('保存失败: ' + e); }
     }
-
     /* 显示与个性化:读写 /api/appcfg */
     async function apcLoad() {
       try {
