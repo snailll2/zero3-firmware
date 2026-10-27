@@ -64,6 +64,17 @@
         # fb0 哨兵方案 2026-10-27 实测否决:kill -9 短测 duty 恒定,但真实运行
         # 后白斑复现+显示引擎损坏(GUI 重启无法恢复)——多开 fyfb 的损坏是
         # 时序性/累积性的,短测无法暴露。白斑兜底=守护死亡检测恢复 duty(≤5s)。
+        # 内核日志流式落盘(2026-10-27):开机窗口的内核 Oops 随复位丢失——
+        # 流式记录器常驻,死亡瞬间现场永久保留 /data/kmsg.log(2MB 上限滚动)
+        KM=0
+        for p in $(ps | grep kmsglog | grep -v grep | awk '{print $1}'); do KM=1; done
+        [ "$KM" = "0" ] && [ -x /data/kmsglog.sh ] && ( setsid sh /data/kmsglog.sh >/dev/null 2>&1 & )
+        # 清理手工遗留的 keeper19(与内置看护双实例会各自拉 GUI,
+        # 第二实例 flock 失败退出前已跑 port_disp DEINIT 拆掉第一实例的
+        # 显示链 → 内核 Oops→GUI1 死→"开机+21s 重启"假象,2026-10-27 定案)
+        for kp in $(ps | grep keeper19 | grep -v grep | awk '{print $1}'); do
+            kill -9 $kp 2>/dev/null
+        done
         TRIES=0
         while [ $TRIES -lt 3 ]; do
             cd /data
