@@ -69,6 +69,8 @@
         KM=0
         for p in $(ps | grep kmsglog | grep -v grep | awk '{print $1}'); do KM=1; done
         [ "$KM" = "0" ] && [ -x /data/kmsglog.sh ] && ( setsid sh /data/kmsglog.sh >/dev/null 2>&1 & )
+        [ -x /data/bx2.sh ] && ( setsid sh /data/bx2.sh >/dev/null 2>&1 & )
+        [ -x /data/g83feed.sh ] && ( setsid sh /data/g83feed.sh >/dev/null 2>&1 & )
         # 清理手工遗留的 keeper19(与内置看护双实例会各自拉 GUI,
         # 第二实例 flock 失败退出前已跑 port_disp DEINIT 拆掉第一实例的
         # 显示链 → 内核 Oops→GUI1 死→"开机+21s 重启"假象,2026-10-27 定案)
