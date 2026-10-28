@@ -1,5 +1,7 @@
 # Zero3 智能中控 固件发布仓（NX5, 1024x600）
 
+> 📘 **功能配置与使用说明(面板端 + Web 管理台):[USAGE.md](USAGE.md)**
+
 面向 **Zero3 智能中控（Anyka NX5, 1024×600 触屏）** 的定制固件：LVGL 8.2 多屏仪表 + Home Assistant 双向联动 + 8080 Web 控制台 + 在线更新。
 
 > 本仓库为**发布仓**：只放运行时产物（nx5gui 二进制 / 版本清单 / 安装·卸载脚本）。设备端源码在本地工作区 `aciga_gui`（leelen_intercom_opensrc 移植层）。
