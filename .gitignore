@@ -4,7 +4,6 @@ nx5gui
 nx5gui_latest.tar.gz
 theme/
 nx5_conf/
-ha_integration/
 zero3_bt_ha_integration.zip
 btproxy
 btproxy.sh
