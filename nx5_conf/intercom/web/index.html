@@ -1109,6 +1109,8 @@ async function zbSave(){
           <div style="display:flex;gap:10px;align-items:center;">
             <span id="mijiaBadge" style="font-size:12px;padding:3px 10px;border-radius:9999px;"></span>
             <button class="btn-primary" style="padding:7px 14px;font-size:13px;" onclick="mijiaLogin()">📱 登录小米账号</button>
+            <button class="btn-secondary" style="padding:7px 14px;font-size:13px;" onclick="mijiaRefreshDevices()">📥 更新设备列表</button>
+            <button class="btn-secondary" style="padding:7px 14px;font-size:13px;" onclick="mijiaRefreshRules()">🧩 更新实体转换规则</button>
             <button class="btn-secondary" style="padding:7px 14px;font-size:13px;" onclick="loadMijiaStatus()">🔄 刷新</button>
           </div>
         </div>
@@ -1131,6 +1133,21 @@ async function zbSave(){
           loadMijiaStatus();
         }catch(e){ showToast('❌ 提交失败', true); }
       }
+      async function mijiaRefreshDevices(){
+        try{
+          showToast('📥 设备列表更新已开始(后台执行)');
+          await fetch('/api/mijia/refresh', { method:'POST' });
+          loadMijiaStatus();
+        }catch(e){ showToast('❌ 更新失败', true); }
+      }
+      async function mijiaRefreshRules(){
+        if (!confirm('更新当前实例中设备的实体转换规则(包含 MIoT-Spec-V2 配置)。\n该操作为全局操作且耗时数分钟,确定开始?')) return;
+        try{
+          showToast('🧩 实体转换规则更新已开始(后台执行,耗时数分钟)');
+          await fetch('/api/mijia/rules', { method:'POST' });
+          loadMijiaStatus();
+        }catch(e){ showToast('❌ 更新失败', true); }
+      }
       async function loadMijiaStatus(){
         try{
           const r = await (await fetch('/api/mijia/status')).json();
@@ -1138,9 +1155,28 @@ async function zbSave(){
           const bd = document.getElementById('mijiaBadge');
           if (r.configured) {
             const d = new Date((r.expires_ts || 0) * 1000);
-            el.textContent = `已连接 · ${r.devices} 个实体 · 凭据至 ${d.toLocaleDateString()}`;
-            el.style.color = '#34d399';
-            bd.textContent = '✅ 已连接'; bd.style.background = 'rgba(52,211,153,0.15)'; bd.style.color = '#34d399';
+            const expired = r.expired || ((r.expires_ts || 0) > 0 && Date.now() / 1000 > (r.expires_ts || 0));
+            const chMap = { local: '🏠 本地中枢', cloud: '☁️ 米家云', none: '⛔ 未连接' };
+            const ch = chMap[r.channel] || r.channel || '—';
+            const refreshing = r.dev_refreshing || r.rule_refreshing;
+            el.innerHTML = `设备 <b style="color:#f8fafc;">${r.devices}</b> 台 · 实体 <b style="color:#f8fafc;">${r.entities ?? r.devices}</b> 个 · ` +
+              (refreshing ? `<span style="color:#fbbf24;font-weight:600;">⏳ ${r.dev_refreshing ? '设备列表' : '转换规则'}更新中…</span> · ` : '') +
+              `控制通道 <b style="color:${r.channel === 'local' ? '#34d399' : r.channel === 'cloud' ? '#38bdf8' : '#f87171'};">${ch}</b> · ` +
+              (expired ? `<span style="color:#f87171;font-weight:600;">⛔ 身份已过期</span>`
+                       : `凭据至 ${d.toLocaleDateString()}`);
+            if (expired) {
+              el.style.color = '#f87171';
+              bd.textContent = '🔐 身份过期,请重新登录'; bd.style.background = 'rgba(248,113,113,0.15)'; bd.style.color = '#f87171';
+            } else if (r.channel === 'local') {
+              el.style.color = '#34d399';
+              bd.textContent = '✅ 本地中枢'; bd.style.background = 'rgba(52,211,153,0.15)'; bd.style.color = '#34d399';
+            } else if (r.channel === 'cloud') {
+              el.style.color = '#38bdf8';
+              bd.textContent = '☁️ 米家云'; bd.style.background = 'rgba(56,189,248,0.15)'; bd.style.color = '#38bdf8';
+            } else {
+              el.style.color = '#f87171';
+              bd.textContent = '⛔ 未连接'; bd.style.background = 'rgba(248,113,113,0.15)'; bd.style.color = '#f87171';
+            }
           } else {
             el.textContent = '未登录(点击「登录小米账号」完成授权)';
             el.style.color = '#94a3b8';
@@ -4660,6 +4696,9 @@ async function zbSave(){
             <div>
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px;flex-wrap:wrap;">
                 <div style="display:flex;gap:4px;align-items:center;">
+                  ${(e.entity_id || '').startsWith('mijia.')
+                    ? `<span style="font-size:11px;padding:2px 6px;border-radius:4px;background:#FF6A00;color:#fff;font-weight:600;">米家</span>`
+                    : `<span style="font-size:11px;padding:2px 6px;border-radius:4px;background:#7c3aed;color:#ddd6fe;font-weight:600;">HA</span>`}
                   <span style="font-size:11px;padding:2px 6px;border-radius:4px;background:#0284c7;color:#fff;font-weight:600;">${domainIcons[e.domain] || e.domain}</span>
                   ${e.area ? `<span style="font-size:11px;padding:2px 6px;border-radius:4px;background:#0f766e;color:#5eead4;font-weight:600;">📍 ${e.area}</span>` : `<span style="font-size:11px;padding:2px 6px;border-radius:4px;background:#334155;color:#94a3b8;">未分配</span>`}
                   ${isAdded ? `<span style="font-size:11px;padding:2px 6px;border-radius:4px;background:#14532d;color:#86efac;font-weight:600;">已在屏幕</span>` : ''}
