@@ -1,8 +1,8 @@
 {
-  "version": "1.0.172+20261028",
+  "version": "1.0.173+20261028",
   "release_date": "2026-10-28",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 3139983,
-  "md5": "f9920311f4d62d8837c1182ae94c09d3",
-  "notes": ["\u7c73\u5bb6\u5b9e\u4f53\u56de\u6302\u4e0e\u533a\u57df\u540c\u6b65\u6062\u590d(fix139b:\u7ed1\u5b9a\u9875\u6570\u636e\u5b8c\u6574 1802 \u5b9e\u4f53)", "\u7c73\u5bb6\u540d\u79f0/\u533a\u57df\\uXXXX\u89e3\u7801+UTF-8\u5b89\u5168\u622a\u65ad,\u4e2d\u6587\u663e\u793a\u6b63\u5e38", "\u53d1\u73b0\u6c60\u771f\u6362\u5165\u4fee\u590d(\u6b64\u524dtmp\u6c60\u91cd\u6784\u540e\u4ece\u672a\u771f\u6b63\u5165\u6c60)"]
+  "size": 3140450,
+  "md5": "bb0b024147e1c8f73ca81c32717be074",
+  "notes": ["\u7c73\u5bb6\u672c\u5730\u63a8\u9001\u63a5\u6536\u4fee\u590d:\u8df3\u8fc7MQTT v5 PUBLISH\u5c5e\u6027\u5b57\u8282+\u56dePUBACK,\u5916\u90e8\u63a7\u5236(App/HA/\u5899\u9762\u5f00\u5173)\u72b6\u6001\u5b9e\u65f6\u56de\u4f20\u9762\u677f", "MIPS\u4f1a\u8bdd\u8bca\u65ad\u589e\u5f3a"]
 }
