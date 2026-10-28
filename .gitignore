@@ -1,0 +1,18 @@
+# 打包暂存物(publish.sh 在本目录打包)— 一律不入库:
+# 全部内容已包含在 release/nx5gui_latest.tar.gz 或 release 资产 zip 内
+nx5gui
+nx5gui_latest.tar.gz
+theme/
+nx5_conf/
+ha_integration/
+zero3_bt_ha_integration.zip
+btproxy
+btproxy.sh
+zbbridge
+zbbridge.sh
+nx5blpub
+kmsglog.sh
+bx2.sh
+g83feed.sh
+start_app.sh
+data_app.sh
