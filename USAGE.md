@@ -127,7 +127,7 @@
   - 顶部**来源筛选**:全部 / 📱 米家 / 🏠 HA(米家=云直连实体 `mijia.*`;HA=经 Home Assistant 的实体);**类型筛选**:空调/灯/窗帘/开关/风扇/传感器/按钮;搜索框匹配设备名/型号/entity_id。
   - 一级为**设备列表**(设备名/型号/区域/实体数;空调行内联目标温度+室温),点设备进入其实体列表,点实体行展开 **attributes JSON**(与 HA `/api/states` 同构)。
   - 数据取**本地实体池缓存**,打开弹窗不产生网络请求;仅点「🔄 刷新」重新拉取。双侧同设备(did 相同)自动合并展示。
-- **蓝牙代理 / Zigbee 代理**:网关地址、凭据、开关与运行状态(数据经 MQTT 进 HA,集成 zero3_bt)。
+- **蓝牙代理 / Zigbee 代理**:见 [第 7 章 蓝牙与 Zigbee 网关](#7-蓝牙与-zigbee-网关mqtt-对接z2m)。
 
 ### 2.3 系统设置页
 
@@ -178,7 +178,65 @@
 - 固件包内含全部守护脚本、主题、spec 缓存;安装脚本幂等,可重复执行。
 - **恢复出厂**:`uninstall.sh`(README 有直链),或设置页系统恢复。
 
-## 7. 常见问题
+## 7. 蓝牙与 Zigbee 网关(MQTT 对接 / Z2M)
+
+面板自带一颗 **EFR32 多协议无线芯片**(Silabs),通过驱动接管可一分为二:蓝牙(BLE 扫描代理)与 Zigbee(Zigbee2MQTT 协调器)。两者都以面板为硬件网关,把数据送到 HA 侧。
+
+### 7.1 蓝牙网关(btproxy,BLE 扫描 → HA)
+
+**原理**:接管 EFR32 芯片进 BLE 扫描态,解析空中的 BLE 广播(MAC/RSSI/广播数据),经 MQTT 主题 `btproxy/adv` 发布(JSON:`{"mac","rssi","name","adv","ts"}`);面板在线心跳走 `btproxy/status`(30s 间隔)。
+
+**面板侧配置**(Web 智能家居页「蓝牙代理」卡片):
+
+| 字段 | 说明 |
+|---|---|
+| MQTT 服务器 | HA 的 MQTT broker 地址,支持 `ip:port` 合写(默认 1883) |
+| 用户名 / 密码 | broker 凭据 |
+| 启用开关 | 开=写 `bt_on` 标志并拉起 btproxy(开机链自动带起) |
+
+- 内部流程:btproxy.sh 先跑原厂 mgw_bt 45s 把芯片推进扫描态(NCP 需厂商初始化),再杀掉换 btproxy 接管串口 `/dev/ttyS2`;guardian 冻结防复活。
+- 未配 MQTT 时运行在纯落盘模式(本地 JSONL),配了即转 MQTT。
+- 日志:`/data/btproxy.log`。
+
+**HA 侧:安装 zero3_bt 集成**(仓库 `ha_integration/zero3_bt/`):
+
+1. 把 `zero3_bt/` 整目录拷入 HA 的 `config/custom_components/`(手动或 HACS),重启 HA。
+2. 前置:HA 已装并配置 **MQTT 集成**(mosquitto 等),且 broker 与面板填同一个。
+3. **零参数添加**:设置 → 设备与服务 → 添加集成 → 搜「Zero3 面板蓝牙代理」→ 确认即完成(面板开机经 `btproxy/status` 自报网关 MAC,集成自动注册为 HA **远程蓝牙扫描器**)。
+4. 之后所有被面板扫到的 BLE 设备(体温计/人体传感器/花盆等)自动进入 HA 蓝牙原生管道,可被 BLE 类集成(BLE Monitor、Miscale 等)直接消费。
+5. 集成提供:`面板在线` 二进制传感器(心跳 180s 超时判离线)与转发统计传感器(计数/最近设备)。
+
+### 7.2 Zigbee 网关(zbbridge → Zigbee2MQTT)
+
+**原理**:杀掉原厂 z3gateway,把 EFR32 切到 Zigbee 协调器模式,zbbridge 在 **TCP 8899** 端口提供串口透传——Z2M(Zigbee2MQTT)把面板当一只「网络串口」协调器用。
+
+**面板侧配置**(Web 智能家居页「Zigbee 代理」卡片):开关 + 运行状态(端口 8899 固定)。
+
+- 开启时执行 zbbridge.sh:冻结 guardian → 杀原厂 z3gateway/mgw_bt → 起 zbbridge(8899 透传)→ 自动重启 btproxy 恢复蓝牙。
+- **注意**:Zigbee 与蓝牙共用一颗芯片,开启 Zigbee 约 1 分钟内蓝牙自动恢复。
+- NCP 被原厂污染(herdsman 报 customFrame 干扰)时:面板 telnet 执行 `sh /data/zbbridge.sh reset`(GPIO81 硬复位 NCP + 蓝牙两段式恢复,全自动)。
+
+**HA 侧:Zigbee2MQTT 对接**(Z2M 所在机器配置):
+
+```yaml
+# Zigbee2MQTT configuration.yaml
+serial:
+  port: tcp://192.168.50.163:8899   # 面板 IP + 8899
+  adapter: ezsp                      # EFR32 = Silabs EZSP 协议
+```
+
+启动 Z2M 后 herdsman 经 TCP 直连面板协调器;配对/管理 Zigbee 子设备与本地 Zigbee 棒完全同用法,设备经 MQTT 进 HA。
+
+### 7.3 网关常见问题
+
+| 现象 | 处理 |
+|---|---|
+| 蓝牙零广播 | 确认 btproxy.log;mgw_bt 初始化需 /tmp/log 目录(1.0.141+ 已自动建) |
+| Z2M 连不上 8899 | 面板 Zigbee 开关未开;或 NCP 需 `sh /data/zbbridge.sh reset` |
+| 开 Zigbee 后蓝牙静默 | 脚本编排会自动恢复 btproxy;未恢复则 telnet `sh /data/btproxy.sh` |
+| HA 搜不到 Zero3 集成 | custom_components/zero3_bt 未就位或 HA 未重启;MQTT 集成未配置也无心跳 |
+
+## 8. 常见问题
 
 | 现象 | 处理 |
 |---|---|
