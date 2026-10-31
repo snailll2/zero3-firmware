@@ -27,6 +27,7 @@
 - 首页排版设计器(拖拽/多屏/背景上传)、智能家居配置(HA/米家/蓝牙/Zigbee 代理)、系统设置
 - **设备管理弹窗**:米家/HA 双入口,来源与类型筛选,设备→实体→attributes 三级查看,本地缓存
 - 实时监视与触控:投屏 JPEG(1024×600 约 40KB/帧,无变化零流量)+ 远程触摸注入
+- **蓝牙 / Zigbee 双网关**:EFR32 芯片一分为二——BLE 扫描代理(MQTT→HA 集成 zero3_bt)+ Zigbee2MQTT 协调器(TCP 串口透传)
 
 **工程化**
 
@@ -34,14 +35,6 @@
 - GPIO83 外部硬看门狗喂狗、崩溃日志流式落盘(kmsg.log/nx5gui_live.log)、Ed25519 授权验签
 
 > 本仓库为**发布仓**：只放运行时产物（nx5gui 二进制 / 版本清单 / 安装·卸载脚本）。设备端源码在本地工作区 `aciga_gui`（leelen_intercom_opensrc 移植层）。
-
-## 在线更新（设备 Web 控制台）
-
-Web 控制台 → **设置 → 固件更新**：
-
-1. **检测更新**：设备优先直连 GitHub；不可用时自动走 **浏览器中转**（电脑拉取后分块传给设备）
-2. **下载**：分块传输 + md5 强校验
-3. **安装**：全量 tar 更新（二进制+脚本+主题）→ md5 强校验 → 自动重启生效
 
 ## telnet 一键安装（新机/恢复用）
 
@@ -85,29 +78,17 @@ done
 
 **离线环境**（设备不通 GitHub）：PC 从 [Release](https://github.com/snailll2/zero3-firmware/releases/latest) 下载 `nx5gui_latest.tar.gz`，推到设备 `/tmp/`（scp/浏览器均可），重跑上面引导脚本会自动检测本地包跳过下载。
 
-## 启动链（v9 纯直启,2026-10-26 起）
+## 使用说明
 
-**双通道自启**，全程不动 `/system`（只读 squashfs）：
+装好之后的**面板端操作与 Web 端全部配置**——屏幕编辑器逐项参数、智能家居页(HA 连接 / 米家账号 / 蓝牙 / Zigbee 网关)、设备管理弹窗、对接 API、投屏、常见问题——见 **[USAGE.md](USAGE.md)**。
 
-1. **官方分叉点**（产测模式）：`/data/productionTest`（文件）+ `/data/nand-1`（目录）存在时，原厂 `start_app.sh` 的 `user_app_init()` 走产测分支——**lingdong_app.sh 整链不执行**（linkdora_broker / aciga_devinfo / aciga_guardian 均不自启；guardian 不存在 → 原厂 GUI（aciga_lvgl）永不被拉起）。
-2. **Sinit 钩子**：原厂 init 检查 `/data/bin/data_app.sh` 存在则执行 `/data/bin/start_app.sh`（原厂笔误，可利用）——我们的开机总入口。
+## 在线更新（设备 Web 控制台）
 
-开机时序（直启）：
+Web 控制台 → **设置 → 固件更新**：
 
-```
-上电 → 原厂 init → start_app.sh 检测到 /data/productionTest → 产测分支(原厂链跳过)
-     → Sinit 钩子执行 /data/bin/start_app.sh (v9)
-        ├─ 加载 /data/bin/nx5_env.sh(批次环境变量)
-        ├─ 移植启动 linkdora_broker(消息总线) + aciga_devinfo(WiFi/背光/gl 硬件)
-        │   (guardian 故意不启——它会复活原厂 GUI;WiFi 凭据自动保护回写)
-        └─ /data/nx5gui
-            ├─ fymedia 媒体栈全协议初始化(sys init → VO SetPubAttr → Enable)
-            ├─ open fb0(fyfb 成功绑定 VO 图层)→ 原厂 logo 直接切换到我们的 UI
-            ├─ GUI 进程内 GPIO83 外部硬看门狗喂狗(新批次)
-            └─ 看护:GUI 退出重试 ≤3 次
-```
-
-**接管模式**（备选，`NX5_DIRECT_BOOT` 未设时）：原厂 GUI 先点亮面板 → 我们 SIGSTOP 冻结它（fd 保留、vo 管线继续扫描）→ 写 fb0 上屏。批次环境（`nx5_env.sh`，install.sh 按 ioctrl.ko md5 判定）：新批次（163 型）`NX5_GPIO83FEED=1`+`NX5_NOWDT=1`；旧批次（149 型）GUI 自行开 `/dev/watchdog`。
+1. **检测更新**：设备优先直连 GitHub；不可用时自动走 **浏览器中转**（电脑拉取后分块传给设备）
+2. **下载**：分块传输 + md5 强校验
+3. **安装**：全量 tar 更新（二进制+脚本+主题）→ md5 强校验 → 自动重启生效
 
 ## 设备端文件清单
 
