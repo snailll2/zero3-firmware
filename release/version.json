@@ -1,9 +1,9 @@
 {
-  "version": "1.0.202+20261102",
+  "version": "1.0.246+20261102",
   "release_date": "2026-11-02",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 4768061,
-  "md5": "37fa81de33304ddcaae36f3b07200b75",
-  "sig": "8f110cc24eac6508ae9d80660f24f0f2c5df80902fe62fbe3985bbfd36023484223b3f857dd02750f9ec585ff4a3f3f44d39dcbda775b085b1825bc15153f906",
-  "notes": ["OTA \u6e05\u5355\u4e0e\u56fa\u4ef6\u4e0b\u8f7d\u52a0\u7f13\u5b58\u51fb\u7a7f,\u53d1\u5e03\u540e\u4e0d\u518d\u88ab CDN \u65e7\u7f13\u5b58\u6321\u4f4f", "Web/OTA JSON \u7edf\u4e00\u4e3a yyjson", "OTA \u6e05\u5355\u5f3a\u5236 Ed25519 \u7b7e\u540d", "\u9996\u9875\u5feb\u7167\u7a7a\u95f2\u9884\u70ed", "\u4fee\u590d spec_add \u56de\u9000\u5206\u652f\u5d29\u6e83"]
+  "size": 4863095,
+  "md5": "e4b5fe0a2b93bf49ade733a1877fa272",
+  "sig": "74b88d6e217f273cc209a98c02eaeeacddd6cbce87bb1be5bb0f856c525e0e8afd90f4ebf168297b68cda48e8e85cf880aa19adff84e12a7946c41137d73fa00",
+  "notes": ["\u4fee\u590d\u606f\u5c4f/\u5f85\u673a\u540e\u4eae\u5ea6\u4e0d\u6062\u590d(\u79fb\u9664\u9501\u5c4f30%\u4e0e\u5f85\u673a\u534a\u4eae\u4e24\u5904\u964d\u4eae\u903b\u8f91)", "\u65b0\u589e\u5c4f\u5e55\u6295\u5c4f\u786c\u4ef6 JPEG + GET /api/mjpeg(multipart, 1024\u00d7608, 20fps, \u6d4f\u89c8\u5668\u539f\u751f img)", "GET /api/snap \u6539\u4e3a\u786c\u4ef6 JPEG", "/api/ha/entities \u9010\u5b9e\u4f53\u7247\u6bb5\u7f13\u5b58:997KB \u54cd\u5e94 1.15s\u21920.2s;gzip \u51cf\u5c11 9.2\u00d7(\u9700\u663e\u5f0f ?gzip=1)", "HTTP \u6536\u655b\u4e3a CivetWeb \u5355\u5f15\u64ce,\u79fb\u9664\u65e7 ic_web.c;\u8865\u9f50 GET /api/ha_cfg \u4e0e /bg/*.png", "btproxy \u8c03\u8bd5\u843d\u76d8\u9ed8\u8ba4\u5173\u95ed(2MB \u8f6e\u8f6c,\u521b\u5efa bt_debug \u5f00\u542f)", "/api/stat\u3001/api/mem \u6062\u590d LVGL \u6c60\u5b57\u6bb5"]
 }
