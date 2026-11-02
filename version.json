@@ -1,9 +1,9 @@
 {
-  "version": "1.0.246+20261102",
+  "version": "1.0.247+20261102",
   "release_date": "2026-11-02",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 4863095,
-  "md5": "e4b5fe0a2b93bf49ade733a1877fa272",
-  "sig": "74b88d6e217f273cc209a98c02eaeeacddd6cbce87bb1be5bb0f856c525e0e8afd90f4ebf168297b68cda48e8e85cf880aa19adff84e12a7946c41137d73fa00",
-  "notes": ["\u4fee\u590d\u606f\u5c4f/\u5f85\u673a\u540e\u4eae\u5ea6\u4e0d\u6062\u590d(\u79fb\u9664\u9501\u5c4f30%\u4e0e\u5f85\u673a\u534a\u4eae\u4e24\u5904\u964d\u4eae\u903b\u8f91)", "\u65b0\u589e\u5c4f\u5e55\u6295\u5c4f\u786c\u4ef6 JPEG + GET /api/mjpeg(multipart, 1024\u00d7608, 20fps, \u6d4f\u89c8\u5668\u539f\u751f img)", "GET /api/snap \u6539\u4e3a\u786c\u4ef6 JPEG", "/api/ha/entities \u9010\u5b9e\u4f53\u7247\u6bb5\u7f13\u5b58:997KB \u54cd\u5e94 1.15s\u21920.2s;gzip \u51cf\u5c11 9.2\u00d7(\u9700\u663e\u5f0f ?gzip=1)", "HTTP \u6536\u655b\u4e3a CivetWeb \u5355\u5f15\u64ce,\u79fb\u9664\u65e7 ic_web.c;\u8865\u9f50 GET /api/ha_cfg \u4e0e /bg/*.png", "btproxy \u8c03\u8bd5\u843d\u76d8\u9ed8\u8ba4\u5173\u95ed(2MB \u8f6e\u8f6c,\u521b\u5efa bt_debug \u5f00\u542f)", "/api/stat\u3001/api/mem \u6062\u590d LVGL \u6c60\u5b57\u6bb5"]
+  "size": 4863221,
+  "md5": "90afbab2d0f357a3f11c7c6e85a6d21c",
+  "sig": "d2c60898df05e2f8796abfe5c63693cf6c963941635e00c2c94f8a4fa29520a6cfa4f22a92f990890c626c978f8137ee0d6ffc60dac855aec75c224fe7faa607",
+  "notes": ["\u4fee\u590d /api/update/status \u66f4\u65b0\u8bf4\u660e\u622a\u65ad\u4e2d\u6587/\u672a\u8f6c\u4e49\u5bfc\u81f4 JSON \u975e\u6cd5(Web OTA \u9762\u677f\u89e3\u6790\u5931\u8d25)", "\u4fee\u590d\u606f\u5c4f/\u5f85\u673a\u540e\u4eae\u5ea6\u4e0d\u6062\u590d(\u79fb\u9664\u9501\u5c4f30%\u4e0e\u5f85\u673a\u534a\u4eae\u4e24\u5904\u964d\u4eae\u903b\u8f91)", "\u65b0\u589e\u5c4f\u5e55\u6295\u5c4f\u786c\u4ef6 JPEG + GET /api/mjpeg(multipart, 1024\u00d7608, 20fps, \u6d4f\u89c8\u5668\u539f\u751f img);/api/snap \u6539\u4e3a\u786c\u4ef6 JPEG", "/api/ha/entities \u9010\u5b9e\u4f53\u7247\u6bb5\u7f13\u5b58:997KB \u54cd\u5e94 1.15s\u21920.2s;gzip \u51cf\u5c11 9.2\u00d7(\u9700\u663e\u5f0f ?gzip=1)", "HTTP \u6536\u655b\u4e3a CivetWeb \u5355\u5f15\u64ce\u5e76\u5220\u9664\u65e7 ic_web.c;\u8865\u9f50 GET /api/ha_cfg \u4e0e /bg/*.png", "btproxy \u8c03\u8bd5\u843d\u76d8\u9ed8\u8ba4\u5173\u95ed(2MB \u8f6e\u8f6c,\u521b\u5efa bt_debug \u5f00\u542f)"]
 }
