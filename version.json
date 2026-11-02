@@ -1,9 +1,9 @@
 {
-  "version": "1.0.199+20261102",
+  "version": "1.0.201+20261102",
   "release_date": "2026-11-02",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 4766170,
-  "md5": "7b8444f8ac717caee0a21a62daa44b00",
-  "sig": "fc09df562fc35cc7fb6d011f8a1481070dce209d6b6c80766f42df517137feef1f6327fea03824fd962cd48bfce4000563adb6d783402ea76a65947e81fe880b",
-  "notes": ["\u6027\u80fd\u4f18\u5316:\u540c\u6b65/HTTP/\u89c6\u9891\u4e0e\u6295\u5c4f\u8def\u5f84\u6536\u53e3,\u5185\u5b58\u5360\u7528\u4e0b\u964d", "\u5b9e\u4f53\u4e0e\u72b6\u6001:\u5168\u91cf\u540c\u6b65\u540e\u53f0\u5316\u3001\u6c60\u539f\u5b50\u63d0\u4ea4\u3001\u54c8\u5e0c\u7d22\u5f15", "\u6444\u50cf\u5934:shm \u534f\u8bae v2(\u8bfb\u65b9\u5360\u7528\u63e1\u624b),\u64ad\u653e\u66f4\u7a33", "\u7a33\u5b9a\u6027:\u9759\u6001\u4e8c\u8fdb\u5236 BSS 39.8\u219220.4MB,\u4f4e\u5185\u5b58\u4e0b\u53ef\u6b63\u5e38\u91cd\u542f", "OTA:\u6e05\u5355 Ed25519 \u7b7e\u540d + \u4e0b\u8f7d\u5b8c\u6574\u6027\u4e0e\u56de\u6eda"]
+  "size": 4767913,
+  "md5": "e788eee5494b374c8fc49372bfa1b8b2",
+  "sig": "91ff084f483416600cd80bc7c43db14b64c11d8a2534608c60ec31ea19f9540559e72aaf61626117a48a6176504e73022f0824cedc796357d512960141dc3c02",
+  "notes": ["Web/OTA JSON \u7edf\u4e00\u4e3a yyjson,\u89e3\u6790\u66f4\u4e25\u683c", "OTA \u6e05\u5355\u5f3a\u5236 Ed25519 \u7b7e\u540d,\u65e0\u7b7e\u540d\u62d2\u7edd", "\u9996\u9875\u5feb\u7167\u7a7a\u95f2\u9884\u70ed,\u9996\u6b21\u6ed1\u52a8\u66f4\u987a", "\u4fee\u590d spec_add \u56de\u9000\u5206\u652f yyjson \u8bef\u7528\u5d29\u6e83", "\u8d85\u5927\u5b9e\u4f53/\u89c4\u5219\u7f13\u5b58\u589e\u52a0\u53ef\u89c1\u6027\u4e0e\u8ffd\u6eaf\u65e5\u5fd7"]
 }
