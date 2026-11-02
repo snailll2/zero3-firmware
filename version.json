@@ -1,9 +1,9 @@
 {
-  "version": "1.0.201+20261102",
+  "version": "1.0.202+20261102",
   "release_date": "2026-11-02",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 4767913,
-  "md5": "e788eee5494b374c8fc49372bfa1b8b2",
-  "sig": "91ff084f483416600cd80bc7c43db14b64c11d8a2534608c60ec31ea19f9540559e72aaf61626117a48a6176504e73022f0824cedc796357d512960141dc3c02",
-  "notes": ["Web/OTA JSON \u7edf\u4e00\u4e3a yyjson,\u89e3\u6790\u66f4\u4e25\u683c", "OTA \u6e05\u5355\u5f3a\u5236 Ed25519 \u7b7e\u540d,\u65e0\u7b7e\u540d\u62d2\u7edd", "\u9996\u9875\u5feb\u7167\u7a7a\u95f2\u9884\u70ed,\u9996\u6b21\u6ed1\u52a8\u66f4\u987a", "\u4fee\u590d spec_add \u56de\u9000\u5206\u652f yyjson \u8bef\u7528\u5d29\u6e83", "\u8d85\u5927\u5b9e\u4f53/\u89c4\u5219\u7f13\u5b58\u589e\u52a0\u53ef\u89c1\u6027\u4e0e\u8ffd\u6eaf\u65e5\u5fd7"]
+  "size": 4768061,
+  "md5": "37fa81de33304ddcaae36f3b07200b75",
+  "sig": "8f110cc24eac6508ae9d80660f24f0f2c5df80902fe62fbe3985bbfd36023484223b3f857dd02750f9ec585ff4a3f3f44d39dcbda775b085b1825bc15153f906",
+  "notes": ["OTA \u6e05\u5355\u4e0e\u56fa\u4ef6\u4e0b\u8f7d\u52a0\u7f13\u5b58\u51fb\u7a7f,\u53d1\u5e03\u540e\u4e0d\u518d\u88ab CDN \u65e7\u7f13\u5b58\u6321\u4f4f", "Web/OTA JSON \u7edf\u4e00\u4e3a yyjson", "OTA \u6e05\u5355\u5f3a\u5236 Ed25519 \u7b7e\u540d", "\u9996\u9875\u5feb\u7167\u7a7a\u95f2\u9884\u70ed", "\u4fee\u590d spec_add \u56de\u9000\u5206\u652f\u5d29\u6e83"]
 }
