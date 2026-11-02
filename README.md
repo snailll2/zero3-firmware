@@ -1,40 +1,16 @@
 # Zero3 智能中控 固件发布仓（NX5, 1024x600）
 
-面向 **Zero3 智能中控（NX5, 1024×600 触屏）** 的定制固件：LVGL 8.2 多屏仪表 + Home Assistant 双向联动 + 米家云直连 + 8080 Web 控制台 + 投屏 + 在线更新。
-
-## 功能特性
-
-**多屏仪表（面板端）**
-
-- LVGL 8.2 多屏主页,卡片拖拽布局(实体/功能/时钟/天气/UDP/Shell 卡),主题与背景自定义
-- 实体磁贴统一四角版式:图标左上、名称左下、控制控件内联(开关/灯亮度色温/窗帘三键/空调温控)
-- 空调卡:大号温度 ± 步进,模式/风速按设备枚举值表动态渲染(中文标签随云端译名,不同机型自适应),室温/模式/风速信息行可点按循环
-- 锁屏三模式(模拟钟表/数字大钟/相册轮播),两级息屏,物理按键 1-4 号可配动作
-
-**Home Assistant 联动**
-
-- REST + WebSocket 双通道:状态轮询与推送同源,控制按域分发,本机实体反向暴露给 HA
-- `/api/ha/entities` 与 HA `/api/states` 格式同构(attributes 按域供数 + device 设备关联),第三方对接零成本
-
-**米家云直连(不经 HA)**
-
-- 与官方 ha_xiaomi_home 集成**实体级 1:1 对齐**:实体集 100% 覆盖、名称一致率 97.8%、eid 官方同构
-- 官方同款转换管线:spec filter/modify 规则引擎、devmap/svcmap 吸收、multiLang 中文译名、显式 dids 二段查询(子设备云名/云改名即时跟进)、.sN 子设备并入父设备
-- spec 缓存按 urn 版本键存储,设备 spec 升级自动刷新;8 域真控制(开关/灯/空调/窗帘/风扇/扫地机/notify/按钮)
-
-**Web 控制台(8080)**
-
-- 首页排版设计器(拖拽/多屏/背景上传)、智能家居配置(HA/米家/蓝牙/Zigbee 代理)、系统设置
-- **设备管理弹窗**:米家/HA 双入口,来源与类型筛选,设备→实体→attributes 三级查看,本地缓存
-- 实时监视与触控:投屏 JPEG(1024×600 约 40KB/帧,无变化零流量)+ 远程触摸注入
-- **蓝牙 / Zigbee 双网关**:EFR32 芯片一分为二——BLE 扫描代理(MQTT→HA 集成 zero3_bt)+ Zigbee2MQTT 协调器(TCP 串口透传)
-
-**工程化**
-
-- 在线 OTA(分块传输 + md5 强校验 + 浏览器中转兜底)、telnet 一键安装、离线安装
-- GPIO83 外部硬看门狗喂狗、崩溃日志流式落盘(kmsg.log/nx5gui_live.log)、Ed25519 授权验签
+面向 **Zero3 智能中控（Anyka NX5, 1024×600 触屏）** 的定制固件：LVGL 8.2 多屏仪表 + Home Assistant 双向联动 + 8080 Web 控制台 + 在线更新。
 
 > 本仓库为**发布仓**：只放运行时产物（nx5gui 二进制 / 版本清单 / 安装·卸载脚本）。设备端源码在本地工作区 `aciga_gui`（leelen_intercom_opensrc 移植层）。
+
+## 在线更新（设备 Web 控制台）
+
+Web 控制台 → **设置 → 固件更新**：
+
+1. **检测更新**：设备优先直连 GitHub；不可用时自动走 **浏览器中转**（电脑拉取后分块传给设备）
+2. **下载**：分块传输 + md5 强校验
+3. **安装**：全量 tar 更新（二进制+脚本+主题）→ md5 强校验 → 自动重启生效
 
 ## telnet 一键安装（新机/恢复用）
 
@@ -78,17 +54,29 @@ done
 
 **离线环境**（设备不通 GitHub）：PC 从 [Release](https://github.com/snailll2/zero3-firmware/releases/latest) 下载 `nx5gui_latest.tar.gz`，推到设备 `/tmp/`（scp/浏览器均可），重跑上面引导脚本会自动检测本地包跳过下载。
 
-## 使用说明
+## 启动链（v9 纯直启,2026-10-26 起）
 
-装好之后的**面板端操作与 Web 端全部配置**——屏幕编辑器逐项参数、智能家居页(HA 连接 / 米家账号 / 蓝牙 / Zigbee 网关)、设备管理弹窗、对接 API、投屏、常见问题——见 **[USAGE.md](USAGE.md)**。
+**双通道自启**，全程不动 `/system`（只读 squashfs）：
 
-## 在线更新（设备 Web 控制台）
+1. **官方分叉点**（产测模式）：`/data/productionTest`（文件）+ `/data/nand-1`（目录）存在时，原厂 `start_app.sh` 的 `user_app_init()` 走产测分支——**lingdong_app.sh 整链不执行**（linkdora_broker / aciga_devinfo / aciga_guardian 均不自启；guardian 不存在 → 原厂 GUI（aciga_lvgl）永不被拉起）。
+2. **Sinit 钩子**：原厂 init 检查 `/data/bin/data_app.sh` 存在则执行 `/data/bin/start_app.sh`（原厂笔误，可利用）——我们的开机总入口。
 
-Web 控制台 → **设置 → 固件更新**：
+开机时序（直启）：
 
-1. **检测更新**：设备优先直连 GitHub；不可用时自动走 **浏览器中转**（电脑拉取后分块传给设备）
-2. **下载**：分块传输 + md5 强校验
-3. **安装**：全量 tar 更新（二进制+脚本+主题）→ md5 强校验 → 自动重启生效
+```
+上电 → 原厂 init → start_app.sh 检测到 /data/productionTest → 产测分支(原厂链跳过)
+     → Sinit 钩子执行 /data/bin/start_app.sh (v9)
+        ├─ 加载 /data/bin/nx5_env.sh(批次环境变量)
+        ├─ 移植启动 linkdora_broker(消息总线) + aciga_devinfo(WiFi/背光/gl 硬件)
+        │   (guardian 故意不启——它会复活原厂 GUI;WiFi 凭据自动保护回写)
+        └─ /data/nx5gui
+            ├─ fymedia 媒体栈全协议初始化(sys init → VO SetPubAttr → Enable)
+            ├─ open fb0(fyfb 成功绑定 VO 图层)→ 原厂 logo 直接切换到我们的 UI
+            ├─ GUI 进程内 GPIO83 外部硬看门狗喂狗(新批次)
+            └─ 看护:GUI 退出重试 ≤3 次
+```
+
+**接管模式**（备选，`NX5_DIRECT_BOOT` 未设时）：原厂 GUI 先点亮面板 → 我们 SIGSTOP 冻结它（fd 保留、vo 管线继续扫描）→ 写 fb0 上屏。批次环境（`nx5_env.sh`，install.sh 按 ioctrl.ko md5 判定）：新批次（163 型）`NX5_GPIO83FEED=1`+`NX5_NOWDT=1`；旧批次（149 型）GUI 自行开 `/dev/watchdog`。
 
 ## 设备端文件清单
 
@@ -113,9 +101,9 @@ Web 控制台 → **设置 → 固件更新**：
 
 ```json
 {
-  "version": "1.0.186+20261031",
+  "version": "1.0.117+20261007",
   "file": "nx5gui",
-  "size": 3434845,
+  "size": 4855436,
   "md5": "…",
   "notes": ["更新说明1", "更新说明2"]
 }

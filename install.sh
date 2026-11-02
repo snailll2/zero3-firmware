@@ -159,6 +159,7 @@ if [ ! -f /data/nx5gui ]; then
     exit 1
 fi
 chmod +x /data/nx5gui
+[ -f /data/nx5_vdec_helper ] && chmod +x /data/nx5_vdec_helper
 sync
 # 还原用户配置(安装包内不带配置,避免覆盖)
 if [ -d "$BACKUP_DIR" ]; then
@@ -197,6 +198,15 @@ touch /data/productionTest
 grep -q NX5_DIRECT_BOOT /data/bin/nx5_env.sh 2>/dev/null || echo "export NX5_DIRECT_BOOT=1" >> /data/bin/nx5_env.sh
 echo "[+] 直启模式已布防(下次开机原厂 GUI 不再启动,由 nx5gui 自主点亮)"
 
+# 硬解伴生进程:换掉旧实例(运行中的二进制无法被 tar 覆盖)
+for p in $(ls /proc 2>/dev/null | grep -E '^[0-9]+$'); do
+    e=$(readlink /proc/$p/exe 2>/dev/null)
+    [ "${e%% *}" = "/data/nx5_vdec_helper" ] && kill -9 $p 2>/dev/null
+done
+rm -f /tmp/nx5cam_d.pid /tmp/camhls.url /tmp/camreq /dev/shm/nx5cam /tmp/nx5cam_d.lock
+# 媒体系统 SYS 初始化必须在 GUI 起显示之前(bootstrap 已就绪时会秒退)
+[ -x /data/nx5_vdec_helper ] && /data/nx5_vdec_helper --bootstrap >>/data/nx5gui_live.log 2>&1
+[ -x /data/nx5_vdec_helper ] && ( cd /data && nohup ./nx5_vdec_helper --daemon >>/data/nx5gui_live.log 2>&1 & )
 # 立即热启动(最小化喂狗空窗)
 (
     cd /data
