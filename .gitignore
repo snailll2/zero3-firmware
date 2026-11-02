@@ -16,3 +16,7 @@ g83feed.sh
 start_app.sh
 data_app.sh
 specs/
+# 2026-11-02:随包产物已在 tar 内(nx5_vdec_helper / specs/rules.json),仓库根不再重复
+nx5_vdec_helper
+rules.json
+.DS_Store
