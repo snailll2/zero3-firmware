@@ -57,13 +57,20 @@
 登录面板后，只需下载安装脚本并执行，自动安装最新版本：
 
 ```sh
+(
 G=snailll2/zero3-firmware
 for S in "ghfast.top/https://raw.githubusercontent.com/$G/main" "gh-proxy.org/https://raw.githubusercontent.com/$G/main" "cdn.jsdelivr.net/gh/$G@main" "raw.githubusercontent.com/$G/main"; do
+    echo "正在尝试下载源：https://$S"
     if curl -fkL --connect-timeout 5 --max-time 30 "https://$S/installer.sh" -o /tmp/installer.sh && [ -s /tmp/installer.sh ] && sh -n /tmp/installer.sh; then
+        echo '下载成功，开始执行安装脚本。'
         sh /tmp/installer.sh
-        break
+        exit $?
     fi
+    echo '当前源下载或校验失败，自动切换下一个下载源……'
 done
+echo '所有下载源均失败，请检查网络或使用离线安装。'
+exit 1
+)
 ```
 
 脚本内部自动查找下载工具、切换代理、获取最新完整包、校验、备份、安装并重启，保留已有配置。仅校验不安装时执行 `sh /tmp/installer.sh --check`。支持自定义 GitHub 反向代理：`NX5_GITHUB_PROXY=https://proxy.example sh /tmp/installer.sh`，优先尝试指定代理，失败自动回退 ghfast、gh-proxy.org、jsDelivr 和 GitHub。初次下载脚本失败时可从仓库下载 `installer.sh` 传入设备执行。 首次下载和包内下载均支持上述四源回退。多个自定义代理按顺序填写：`NX5_GITHUB_PROXIES="https://proxy-a.example https://proxy-b.example" sh /tmp/installer.sh`；全部失败后继续尝试内置源，单代理变量仍兼容。
