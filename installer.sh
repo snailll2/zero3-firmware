@@ -6,6 +6,10 @@ case "${1:-}" in --check) CHECK=1;; '') ;; *) echo 'Usage: sh installer.sh [--ch
 DIR=${NX5_BOOTSTRAP_DIR:-/data/zero3-install}
 mkdir -p "$DIR/release"
 cd "$DIR"
+cleanup_download() { rm -f install.sh.part release/nx5gui_latest.tar.gz.part release/nx5gui_latest.tar.gz; }
+trap cleanup_download EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 C=''
 for p in /data/nx5_conf/intercom/curl /data/scripts/curl /tmp/curl /usr/bin/curl /bin/curl; do
     if [ -x "$p" ]; then C=$p; break; fi
@@ -79,11 +83,12 @@ fetch_verified() {
 fetch_verified install.sh install.sh
 EXPECTED=$(sed -n "s/^EXPECTED_SHA256='\([0-9a-f]*\)'$/\1/p" install.sh)
 fetch_verified release/nx5gui_latest.tar.gz release/nx5gui_latest.tar.gz "$EXPECTED"
-sh install.sh --check
 if [ "$CHECK" = 1 ]; then
+    sh install.sh --check
     echo '[+] Check complete; no installation or reboot performed.'
     exit 0
 fi
 sh install.sh
+rm -f release/nx5gui_latest.tar.gz
 sync
 reboot
