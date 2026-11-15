@@ -20,3 +20,8 @@ specs/
 nx5_vdec_helper
 rules.json
 .DS_Store
+
+# Public rules are downloaded independently by existing devices.
+!rules.json
+!release/specs/
+!release/specs/rules.json

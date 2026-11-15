@@ -1,255 +1,163 @@
 #!/bin/sh
-# ==============================================================================
-# 零洞 Zero3 智能中控 (NX5, 1024x600) - Custom GUI Installer
-# 参照 mopad_lite_custom_gui/install.sh 结构,适配 NX5 接管形态:
-#   - 便携 curl 获取(设备 busybox wget 无 https)→ 多镜像下载 release 包
-#   - 备份用户配置(/data/nx5_conf/intercom/*.json)
-#   - 精确替换 /data/aciga_lvgl(按 exe 匹配杀进程,原厂 /system 冻结共存不动)
-#   - 零重启热启动(keeper 保持接管;curl 持久化供后续 OTA 直连)
-# 更新地址: 本仓库 snailll2/zero3-firmware
-# ==============================================================================
-
-TARGET_BIN="/data/nx5gui"
-LEGACY_BIN="/data/aciga_lvgl"   # ≤1.0.130 借用过原厂名;升级时须清掉避免双实例锁冲突
-CONF_DIR="/data/nx5_conf/intercom"
-mkdir -p "$CONF_DIR"
-TAR_NAME="nx5gui_latest.tar.gz"
-URL_LIST="
-https://ghfast.top/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/release/${TAR_NAME}
-https://gh-proxy.org/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/release/${TAR_NAME}
-https://cdn.jsdelivr.net/gh/snailll2/zero3-firmware@main/release/${TAR_NAME}
-https://raw.githubusercontent.com/snailll2/zero3-firmware/main/release/${TAR_NAME}
-"
-
-echo "========================================================"
-echo "   零洞 Zero3 智能中控固件安装器 (NX5)"
-echo "========================================================"
-
-# ---------------------------------------------------------------- 1. HTTPS curl
-CURL_EXEC=""
-for p in "$CONF_DIR/curl" /data/curl /tmp/curl /usr/bin/curl; do
-    [ -x "$p" ] && CURL_EXEC="$p" && break
-done
-[ -n "$CURL_EXEC" ] || { command -v curl >/dev/null 2>&1 && CURL_EXEC="curl"; }
-if [ -z "$CURL_EXEC" ]; then
-    echo "[*] 无 HTTPS 能力(busybox wget 不支持),经 HTTP 获取便携 curl..."
-    wget -O /tmp/curl "http://master.dl.sourceforge.net/project/aqarahub/binutils/curl?viasf=1" 2>/dev/null || true
-    chmod a+x /tmp/curl 2>/dev/null || true
-    [ -x /tmp/curl ] && CURL_EXEC="/tmp/curl"
-fi
-if [ -z "$CURL_EXEC" ]; then
-    echo "[-] 获取 curl 失败。手动执行:"
-    echo "    wget -O /tmp/curl http://master.dl.sourceforge.net/project/aqarahub/binutils/curl?viasf=1 && chmod +x /tmp/curl"
-    exit 1
-fi
-echo "[+] curl: $CURL_EXEC"
-
-# ---------------------------------------------------------------- 2. /tmp 空间
-AVAIL=$(df -m /tmp 2>/dev/null | awk '$NF=="/tmp"{print $4}')
-case "$AVAIL" in ''|*[!0-9]*) AVAIL=16 ;; esac
-if [ "$AVAIL" -lt 12 ]; then
-    echo "[*] /tmp 剩余 ${AVAIL}M,清理残留..."
-    rm -f /tmp/ota.img /tmp/ota.md5.actual /tmp/ota_ver.json /tmp/ota_flash.log 2>/dev/null
-    AVAIL=$(df -m /tmp 2>/dev/null | awk '$NF=="/tmp"{print $4}')
-fi
-if [ -z "$AVAIL" ] || [ "$AVAIL" -lt 12 ]; then
-    echo "[-] /tmp 空间不足(需 >=12M, 现 ${AVAIL}M),无法安全下载。"
-    exit 1
-fi
-echo "[+] /tmp 可用 ${AVAIL}M"
-
-# ---------------------------------------------------------------- 3. 备份用户配置
-BACKUP_DIR="/data/nx5_conf_backup_$(date +%s)"
-HAS_CFG=0
-for f in "$CONF_DIR"/*.json; do
-    [ -f "$f" ] && HAS_CFG=1 && break
-done
-if [ "$HAS_CFG" -eq 1 ]; then
-    echo "[1/6] 备份用户配置 -> $BACKUP_DIR"
-    mkdir -p "$BACKUP_DIR"
-    cp -f "$CONF_DIR"/*.json "$BACKUP_DIR/" 2>/dev/null || true
-else
-    echo "[1/6] 无既有配置,跳过备份"
-fi
-
-# ---------------------------------------------------------------- 4. 下载 release 包(先验包再动系统)
-echo "[2/6] 检查 release 包..."
-LOCAL_TAR="/tmp/$TAR_NAME"
-DOWNLOAD_OK=0
-# 离线口:PC 下载 tar.gz 推到设备 /tmp/$TAR_NAME 后再跑本脚本,直接跳过下载
-if [ -s "$LOCAL_TAR" ] && tar -tzf "$LOCAL_TAR" >/dev/null 2>&1; then
-    SZ=$(wc -c < "$LOCAL_TAR")
-    if [ "$SZ" -gt 2000000 ]; then
-        DOWNLOAD_OK=1
-        echo "[+] 使用已存在的 /tmp/$TAR_NAME ($SZ bytes,离线模式)"
-    fi
-fi
-[ "$DOWNLOAD_OK" -eq 1 ] || for U in $URL_LIST; do
-    echo "[*] 尝试源: $U"
-    rm -f "$LOCAL_TAR"
-    if $CURL_EXEC -skfL --connect-timeout 10 -m 300 -o "$LOCAL_TAR" "$U" && [ -s "$LOCAL_TAR" ]; then
-        SZ=$(wc -c < "$LOCAL_TAR")
-        if [ "$SZ" -gt 2000000 ] && tar -tzf "$LOCAL_TAR" >/dev/null 2>&1; then
-            DOWNLOAD_OK=1
-            echo "[+] 下载并校验成功 ($SZ bytes)"
-            break
-        fi
-        echo "[!] 此源内容无效,换下一个..."
-    else
-        echo "[!] 此源下载失败,换下一个..."
-    fi
-done
-if [ "$DOWNLOAD_OK" -ne 1 ]; then
-    echo "[-] 所有镜像均无法取得有效 release 包。"
-    echo "    可能原因:设备网络不通/路由器拦截 GitHub 镜像域名。"
-    echo "    处理:①检查 WiFi 或网线连接后重试;②改用离线安装(PC 从 Release 页"
-    echo "    下载 nx5gui_latest.tar.gz 推到设备 /tmp/ 后重跑本脚本,会自动跳过下载)。"
-    exit 1
-fi
-
-# ------------------------------------------------- 4.5 防镜像缓存旧包(2026-10-22 实测坑)
-# ghfast/jsdelivr 会把 release 资产缓存数小时,曾把 1.0.118 旧包当 latest 发给设备。
-# 解包读 tar 内 version.json,与 raw 源 version.json 比对;旧包一律中止(离线口可 FORCE=1 跳过)。
-if [ "$DOWNLOAD_OK" -eq 1 ] && [ -z "$FORCE" ]; then
-    "$CURL_EXEC" -skfL -m 10 "https://raw.githubusercontent.com/snailll2/zero3-firmware/main/release/version.json" -o /tmp/inst_ref_ver.json 2>/dev/null || true
-    REF_VER=$(grep -o '"version"[^,]*' /tmp/inst_ref_ver.json 2>/dev/null | head -1 | cut -d'"' -f4)
-    REF_SIZE=$(grep -o '"size"[^,]*' /tmp/inst_ref_ver.json 2>/dev/null | head -1 | grep -o '[0-9]*')
-    TAR_SIZE_CK=$SZ
-    echo "[*] 包版本: $TAR_VER / 官方最新: ${REF_VER:-未知}"
-    if [ -n "$REF_SIZE" ] && [ -n "$TAR_SIZE_CK" ] && [ "$TAR_SIZE_CK" != "$REF_SIZE" ]; then
-        echo "[-] 镜像缓存了旧包(大小 $TAR_SIZE_CK ≠ 官方 $REF_SIZE),已中止以防降级。"
-        echo "    请稍后重试(缓存约 5-10 分钟过期),或 FORCE=1 强制安装 / 离线模式。"
-        exit 1
-    fi
-fi
-
-# ---------------------------------------------------------------- 3.7 批次检测 → 生成 nx5_env.sh
-# 硬件批次判据:/system/ko/ioctrl.ko 的 md5(2026-10-23 逆向定案,两批驱动仅 PWM 量程差):
-#   432548a3… = 新批次(163 型,固件 4.4.1):板上有外部硬看门狗(GPIO83 喂狗线),
-#               原厂 GUI 被冻结后必须由我们喂 → NX5_GPIO83FEED=1;
-#               /dev/watchdog 武装后行为未单独验证 → NX5_NOWDT=1(暂不开软件狗)。
-#   ae647381…(及其它)= 旧批次(149 型,固件 2.3.2):无外部看门狗电路,
-#               GUI 正常开狗喂狗(崩溃→整机复位→原厂自恢复语义保留)。
-IO_MD5=$(md5sum /system/ko/ioctrl.ko 2>/dev/null | cut -d' ' -f1)
-ENV_FILE="/data/bin/nx5_env.sh"
-mkdir -p /data/bin
-case "$IO_MD5" in
-    432548a3*)
-        printf '# 新批次(163 型):外部硬看门狗 GPIO83 喂狗 + 暂不开软件狗 + LINKDORA 背光(install 自动生成)\nexport NX5_GPIO83FEED=1\nexport NX5_NOWDT=1\nexport NX5_BL_LINKDORA=1\n' > "$ENV_FILE"
-        BATCH="新批次(外部看门狗)"
-        ;;
-    *)
-        printf '# 旧批次(149 型):无外部看门狗,GUI 自行开狗喂狗(install 自动生成)\n' > "$ENV_FILE"
-        BATCH="旧批次(软件喂狗)"
-        ;;
-esac
-chmod +x "$ENV_FILE" 2>/dev/null
-echo "[*] 批次判定: ioctrl.ko=$IO_MD5 → $BATCH → $ENV_FILE"
-
-# ---------------------------------------------------------------- 5. 替换固件(精确 kill,原厂不动)
-# ★2026-10-23 顺序修正(229 实测踩坑):旧批次(149 型)老 GUI 持软件看门狗,
-# 旧顺序"先 kill → 再解包(3.6MB 数秒)→ 才热启动",kill 到新 GUI 接管喂狗的
-# 空窗超看门狗阈值 → 整机复位,安装中途夭折(/tmp 全清)。新顺序:先完成解包/
-# 校验/批次 env 等全部慢操作,最后一条命令链内 kill→mv→热启动(空窗 <1s)。
-echo "[3/6] 预解包(不动运行中的 GUI)..."
-tar -zxvf "$LOCAL_TAR" -C /data > /tmp/install_tar.log 2>&1
-if [ ! -f /data/nx5gui ]; then
-    echo "[-] 解包断言失败(nx5gui 缺失),中止(旧固件仍在)..."
-    rm -f "$LOCAL_TAR"
-    exit 1
-fi
-chmod +x /data/nx5gui
-[ -f /data/nx5_vdec_helper ] && chmod +x /data/nx5_vdec_helper
-sync
-# 还原用户配置(安装包内不带配置,避免覆盖)
-if [ -d "$BACKUP_DIR" ]; then
-    echo "[*] 还原用户配置..."
-    cp -f "$BACKUP_DIR"/*.json "$CONF_DIR/" 2>/dev/null || true
-    rm -rf "$BACKUP_DIR"
-fi
-# 接管脚本准备(落位 /data/bin 在 kill 之后同一链内执行,见下)
-rm -f "$LOCAL_TAR"
-
-echo "[3.6/6] 换血(亚秒空窗:kill→mv→落位→热启动)..."
-for p in $(ps | grep start_app | grep -v grep | awk '{print $1}'); do
-    kill -9 $p 2>/dev/null
-done
-for p in $(ls /proc 2>/dev/null | grep -E '^[0-9]+$'); do
-    e=$(readlink /proc/$p/exe 2>/dev/null)
-    case "$e" in
-        "$TARGET_BIN"|"$TARGET_BIN (deleted)"|"$LEGACY_BIN"|"$LEGACY_BIN (deleted)") kill -9 $p 2>/dev/null ;;
+# Offline full application deployment on the stock NX5 / Zero3 Linux system.
+# The packager replaces the archive digest; no network fetch is required.
+set -eu
+umask 077
+BASE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+ARCHIVE="$BASE/release/nx5gui_latest.tar.gz"
+EXPECTED_SHA256='2ad6408823cd03d42d776609a9b302e4ed8de1fc798e95b0bb641ed6f3268761'
+ROOT=/data
+CHECK=0
+TEST_ROOT=0
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --check) CHECK=1; shift ;;
+        --root) [ "$#" -ge 2 ] || exit 2; ROOT=$2; TEST_ROOT=1; shift 2 ;;
+        *) echo "用法: sh install.sh [--check] [--root 测试目录]"; exit 2 ;;
     esac
 done
-# 清理 ≤1.0.130 的借用名旧二进制(防双实例 flock 冲突),留档 .removed
-[ -f "$LEGACY_BIN" ] && mv -f "$LEGACY_BIN" "${LEGACY_BIN}.removed" 2>/dev/null
-# 接管脚本落位(幂等;已有 start_app.sh.bak 时不覆盖用户备份)
-[ -f /data/bin/start_app.sh ] && cp -f /data/bin/start_app.sh /data/bin/start_app.sh.bak 2>/dev/null
-if [ -f /data/start_app.sh ]; then
-    cp -f /data/start_app.sh /data/bin/start_app.sh && chmod +x /data/bin/start_app.sh
-    [ -f /data/bin/data_app.sh ] || { printf '# dummy: Sinit 检查 data_app.sh 存在但运行 start_app.sh\n' > /data/bin/data_app.sh; chmod +x /data/bin/data_app.sh; }
-    rm -f /data/start_app.sh
-fi
-# ---------------------------------------------------------------- 6.5 直启布防(2026-10-26 起默认)
-# 创建官方产测分叉文件(/data 分区,跨重启):下次开机原厂走产测分支,lingdong_app 整链
-# 不跑(guardian 不存在→原厂 GUI 永不启动),由 start_app.sh v9 + nx5gui fymedia 全协议自点亮。
-# 回退:rm /data/productionTest && rmdir /data/nand-1 && sed 去 NX5_DIRECT_BOOT && reboot
-mkdir -p /data/nand-1 2>/dev/null
-touch /data/productionTest
-grep -q NX5_DIRECT_BOOT /data/bin/nx5_env.sh 2>/dev/null || echo "export NX5_DIRECT_BOOT=1" >> /data/bin/nx5_env.sh
-echo "[+] 直启模式已布防(下次开机原厂 GUI 不再启动,由 nx5gui 自主点亮)"
-
-# 硬解伴生进程:换掉旧实例(运行中的二进制无法被 tar 覆盖)
-for p in $(ls /proc 2>/dev/null | grep -E '^[0-9]+$'); do
-    e=$(readlink /proc/$p/exe 2>/dev/null)
-    [ "${e%% *}" = "/data/nx5_vdec_helper" ] && kill -9 $p 2>/dev/null
-done
-rm -f /tmp/nx5cam_d.pid /tmp/camhls.url /tmp/camreq /dev/shm/nx5cam /tmp/nx5cam_d.lock
-# 媒体系统 SYS 初始化必须在 GUI 起显示之前(bootstrap 已就绪时会秒退)
-[ -x /data/nx5_vdec_helper ] && /data/nx5_vdec_helper --bootstrap >>/data/nx5gui_live.log 2>&1
-[ -x /data/nx5_vdec_helper ] && ( cd /data && nohup ./nx5_vdec_helper --daemon >>/data/nx5gui_live.log 2>&1 & )
-# 立即热启动(最小化喂狗空窗)
-(
-    cd /data
-    [ -f /data/bin/nx5_env.sh ] && . /data/bin/nx5_env.sh
-    NX5TS_DBG=1 nohup ./nx5gui >> /data/nx5gui_live.log 2>&1 &
-)
-echo "[+] 新 GUI 已热启动"
-
-# curl 持久化(后续 OTA 直连快速通道)
-if [ -x /tmp/curl ] && [ ! -x "$CONF_DIR/curl" ]; then
-    cp -f /tmp/curl "$CONF_DIR/curl" 2>/dev/null && chmod +x "$CONF_DIR/curl" 2>/dev/null
-fi
-
-# ---------------------------------------------------------------- 7. 验证
-echo "[6/6] 验证..."
-sleep 5
-GUI_OK=0
-for p in $(ls /proc 2>/dev/null | grep -E '^[0-9]+$'); do
-    e=$(readlink /proc/$p/exe 2>/dev/null)
-    [ "$e" = "$TARGET_BIN" ] && GUI_OK=1 && break
-done
-
-DEV_IP=$(ip -4 addr show eth0 2>/dev/null | grep -o 'inet [0-9.]*' | cut -d' ' -f2)
-[ -z "$DEV_IP" ] && DEV_IP=$(ip -4 addr show wlan0 2>/dev/null | grep -o 'inet [0-9.]*' | cut -d' ' -f2)
-[ -z "$DEV_IP" ] && DEV_IP=$(ifconfig eth0 2>/dev/null | awk '/inet addr/{print $2}' | cut -d: -f2)
-[ -z "$DEV_IP" ] && DEV_IP="<面板IP>"
-
-if [ "$GUI_OK" -eq 1 ]; then
-    echo "========================================================"
-    echo " [SUCCESS] 零洞 Zero3 固件安装成功并已运行!"
-    echo " -> 屏幕已接管(原厂冻结共存,重启自动恢复)"
-    echo " -> Web 控制台: http://${DEV_IP}:8080/"
-    echo " -> 授权: 设置页查看机器码/激活状态"
-    echo "========================================================"
+case "$ROOT" in /*) ;; *) echo '安装目录必须是绝对路径'; exit 2;; esac
+[ "$ROOT" != / ] || { echo '安装目录不能是 /'; exit 2; }
+[ "$TEST_ROOT" = 0 ] || [ "$ROOT" != /data ] || { echo '--root 仅供隔离目录验证'; exit 2; }
+if [ -n "${NX5_OTA_ARCHIVE:-}" ]; then
+    ARCHIVE=$NX5_OTA_ARCHIVE
+    [ -n "${NX5_OTA_MD5:-}" ] || exit 3
+    echo "$NX5_OTA_MD5  $ARCHIVE" | md5sum -c - || exit 4
 else
-    echo "[-] GUI 未能立即拉起,查看 /data/nx5gui_live.log 尾部:"
-    tail -n 8 /data/nx5gui_live.log 2>/dev/null
-    echo "[*] /data/bin keeper 会自动重试拉起;5 秒后复查。"
-    sleep 5
-    for p in $(ls /proc 2>/dev/null | grep -E '^[0-9]+$'); do
-        e=$(readlink /proc/$p/exe 2>/dev/null)
-        [ "$e" = "$TARGET_BIN" ] && echo "[+] keeper 已拉起,安装完成。" && exit 0
-    done
-    exit 1
+    if [ ! -f "$ARCHIVE" ]; then
+        [ "$TEST_ROOT" = 0 ] || { echo '缺少完整部署负载'; exit 3; }
+        case "$(uname -m)" in arm*) ;; *) echo '请使用完整离线目录'; exit 3;; esac
+        C=''
+        for c in /data/nx5_conf/intercom/curl /tmp/curl /usr/bin/curl /bin/curl; do [ ! -x "$c" ] || { C=$c; break; }; done
+        [ -n "$C" ] || { echo '首次安装请下载并传入完整离线部署包'; exit 3; }
+        mkdir -p "$ROOT/nx5_ota"
+        ARCHIVE="$ROOT/nx5_ota/full-runtime.tar.gz"
+        "$C" -fksSL --connect-timeout 10 --max-time 300 'https://raw.githubusercontent.com/snailll2/zero3-firmware/main/release/nx5gui_latest.tar.gz' -o "$ARCHIVE"
+    fi
+    [ "$EXPECTED_SHA256" != '@PAYLOAD_SHA256@' ] || { echo '请使用生成的完整部署包'; exit 3; }
+    echo '[1/5] 校验完整包...'
+    echo "$EXPECTED_SHA256  $ARCHIVE" | sha256sum -c - || exit 4
+fi
+# Reject unexpected paths/types before unpacking. The official package contains regular files only.
+tar -tzf "$ARCHIVE" | awk '
+ /^\// || /(^|\/)\.\.($|\/)/ {bad=1}
+ END {exit bad}' || { echo '归档路径无效'; exit 4; }
+STAGING=${TMPDIR:-/tmp}
+if [ "$TEST_ROOT" = 0 ]; then STAGING=$ROOT; fi
+WORK=$(mktemp -d "$STAGING/.nx5-full-install.XXXXXX")
+APPLYING=0
+BACK=''
+rollback() {
+    [ "$APPLYING" = 1 ] || return 0
+    echo '安装失败，恢复本次替换的文件...'
+    while IFS= read -r rel; do
+        if [ -f "$BACK/files/$rel" ]; then
+            cp -p "$BACK/files/$rel" "$ROOT/$rel.rollback" && mv -f "$ROOT/$rel.rollback" "$ROOT/$rel" || :
+        else rm -f "$ROOT/$rel"; fi
+    done < "$BACK/changed-files"
+}
+cleanup() {
+ rc=$?; trap - EXIT
+ if [ "$rc" != 0 ]; then
+   rollback
+   if [ -n "${NX5_OTA_JOB:-}" ]; then printf '{"job_id":"%s","version":"%s","phase":"failed","status":"FAILED","progress":0,"error":"安装失败，已恢复旧文件"}\n' "$NX5_OTA_JOB" "$NX5_OTA_VERSION" > "$ROOT/nx5_ota/result.json.new"; mv -f "$ROOT/nx5_ota/result.json.new" "$ROOT/nx5_ota/result.json"; fi
+ fi
+ rm -rf "$WORK"; exit "$rc"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+(umask 022; tar -xzf "$ARCHIVE" -C "$WORK")
+(cd "$WORK" && sha256sum -c DEPLOY-SHA256SUMS >/dev/null)
+for f in nx5gui nx5vo nx5_vdec_helper start_app.sh data_app.sh uninstall.sh \
+ nx5_conf/intercom/curl nx5nss/libnss_dns.so.2 nx5nss/libnss_files.so.2 nx5nss/runtime/libc.so.6 \
+ nx5nss/runtime/libresolv.so.2 nx5nss/runtime/ld-linux.so.3 specs/rules.json nx5_conf/intercom/web/index.html; do
+    [ -s "$WORK/$f" ] || { echo "完整包缺少 $f"; exit 5; }
+done
+if [ "$CHECK" = 1 ]; then echo '完整包校验通过，未安装或启动任何程序。'; exit 0; fi
+if [ "$TEST_ROOT" = 0 ]; then
+    [ "$(id -u)" = 0 ] || { echo '请使用设备 root 账户安装'; exit 6; }
+    case "$(uname -m)" in arm*) ;; *) echo '此包仅支持 ARM NX5 / Zero3 设备'; exit 6;; esac
+    [ -c /dev/fb0 ] && [ -f /system/ko/ioctrl.ko ] || { echo '缺少 NX5 原厂显示驱动环境'; exit 6; }
+fi
+mkdir -p "$ROOT"
+ROOT=$(CDPATH= cd -- "$ROOT" && pwd)
+NEEDED=$(du -sk "$WORK" | awk '{print $1}')
+AVAILABLE=$(df -k "$ROOT" | tail -1 | awk '{print $4}')
+[ "$AVAILABLE" -gt 4096 ] || { echo '空间不足：暂存后至少需保留 4 MB'; exit 7; }
+BACK="$ROOT/deployment-backups/$(date +%Y%m%d-%H%M%S)-$$"
+mkdir -p "$BACK/files"; : > "$BACK/changed-files"
+echo '[2/5] 备份旧程序和启动入口...'
+APPLYING=1
+install_file() {
+    src=$1; rel=$2
+    mkdir -p "$ROOT/$(dirname "$rel")"
+    if [ -f "$ROOT/$rel" ]; then
+        mkdir -p "$BACK/files/$(dirname "$rel")"; ln "$ROOT/$rel" "$BACK/files/$rel" 2>/dev/null || cp -p "$ROOT/$rel" "$BACK/files/$rel"
+    fi
+    printf '%s\n' "$rel" >> "$BACK/changed-files"
+    case "$src" in
+        "$WORK"/*) mv "$src" "$ROOT/$rel.installing" ;;
+        *) cp -p "$src" "$ROOT/$rel.installing" ;;
+    esac
+    mv -f "$ROOT/$rel.installing" "$ROOT/$rel"
+}
+echo '[3/5] 安装依赖、规则、主题和页面...'
+# All destinations come from the build-time allowlist, never from a household snapshot.
+while IFS= read -r rel; do
+    case "$rel" in nx5gui|defaults/*) continue;; esac
+    install_file "$WORK/$rel" "$rel"
+done < "$WORK/DEPLOY-FILES"
+# Earlier full bundles put these libc files on the stock command search path.
+# Retain a backup, then remove only those managed runtime names from that path.
+for f in libc.so.6 libresolv.so.2 ld-linux.so.3; do
+    rel="nx5nss/$f"
+    if [ -f "$ROOT/$rel" ]; then
+        mkdir -p "$BACK/files/nx5nss"
+        ln "$ROOT/$rel" "$BACK/files/$rel" 2>/dev/null || cp -p "$ROOT/$rel" "$BACK/files/$rel"
+        printf '%s\n' "$rel" >> "$BACK/changed-files"
+        rm -f "$ROOT/$rel"
+    fi
+done
+# Fresh-install defaults only; never overwrite existing user configuration.
+for f in home_layout.json app.json; do
+    [ -e "$ROOT/nx5_conf/intercom/$f" ] || install_file "$WORK/defaults/$f" "nx5_conf/intercom/$f"
+done
+echo '[4/5] 配置开机入口...'
+install_file "$ROOT/start_app.sh" bin/start_app.sh
+install_file "$ROOT/data_app.sh" bin/data_app.sh
+ENV_NEW="$WORK/nx5_env.sh"
+if [ -f "$ROOT/bin/nx5_env.sh" ]; then cp -p "$ROOT/bin/nx5_env.sh" "$ENV_NEW"; else
+    printf '#!/bin/sh\n# Hardware-specific settings generated on the target device.\n' > "$ENV_NEW"
+    IO_MD5=$(md5sum /system/ko/ioctrl.ko 2>/dev/null | cut -d' ' -f1 || :)
+    case "$IO_MD5" in 432548a3*) printf 'export NX5_GPIO83FEED=1\nexport NX5_NOWDT=1\nexport NX5_BL_LINKDORA=1\n' >> "$ENV_NEW";; esac
+fi
+for setting in 'NX5_DIRECT_BOOT=1' 'NX5_FREE_CARD_DEFAULT_DIR=/data/share/nx5/free_cards/domains'; do
+    key=${setting%%=*}
+    grep -q "^[[:space:]]*export $key=" "$ENV_NEW" || printf 'export %s\n' "$setting" >> "$ENV_NEW"
+done
+chmod 755 "$ENV_NEW"; install_file "$ENV_NEW" bin/nx5_env.sh
+# New payload is committed last; an active GUI keeps its old inode until reboot.
+install_file "$WORK/nx5gui" nx5gui
+# Activate the stock production branch on the next boot. No live VO/GUI restart here.
+if [ ! -e "$ROOT/productionTest" ]; then : > "$WORK/productionTest"; install_file "$WORK/productionTest" productionTest; fi
+mkdir -p "$ROOT/nand-1"
+sync
+echo '[5/5] 完整部署完成。已有账户、Wi-Fi 和布局已保留。'
+echo "本次备份：$BACK"
+if [ "$TEST_ROOT" = 1 ]; then echo '隔离目录验证完成，未访问显示或重启设备。'; else
+    echo '请执行 reboot，重启后由唯一显示守护程序启动界面。'
 fi
 
+if [ -n "${NX5_OTA_JOB:-}" ]; then
+    mkdir -p "$ROOT/nx5_ota"
+    printf "JOB='%s'\nVERSION='%s'\nBACKUP='%s'\n" "$NX5_OTA_JOB" "$NX5_OTA_VERSION" "$BACK" > "$ROOT/nx5_ota/pending.new"
+    mv -f "$ROOT/nx5_ota/pending.new" "$ROOT/nx5_ota/pending"
+    printf '{"job_id":"%s","version":"%s","phase":"rebooting","status":"RUNNING","progress":90,"error":""}\n' "$NX5_OTA_JOB" "$NX5_OTA_VERSION" > "$ROOT/nx5_ota/result.json.new"
+    mv -f "$ROOT/nx5_ota/result.json.new" "$ROOT/nx5_ota/result.json"
+    sync
+    APPLYING=0
+    if [ "$TEST_ROOT" = 0 ]; then sleep 2; reboot; fi
+fi
+
+APPLYING=0

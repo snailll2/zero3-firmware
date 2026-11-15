@@ -1,15 +1,13 @@
 {
-  "version": "2.0.1+20261114",
-  "release_date": "2026-11-14",
+  "version": "2.0.5+20261115-ota2",
+  "release_date": "2026-11-15",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 5785566,
-  "md5": "9067533e106c6606f4d713807deaeebf",
-  "sig": "b23ec9a8a80fdc856ac4b5dc31a46269be4ef0ba52d7e8f0afea0836dbd5387a91a2dce5b6bb5382c10b9a80fddafc01f45a3839e10c303cc5dc31fc38c8da0c",
+  "size": 9263054,
+  "md5": "119eeca6b9fba48b622f0eba7b1719a4",
+  "sig": "4f8e5103c52db7627d30273468a22c26f87cdb9d7dbebccfd4ce4ff2e138db80d3bd51323b245e542ca4f1968a50b1909285db981ff28c121476025ec047c109",
   "notes": [
-    "时间同步多源:HA 之外新增 SNTP 阿里 NTP 兜底,无 HA 也能对时",
-    "人在传感器自动唤醒:绑定人体/存在传感器,有人即 ≤1s 亮屏(HA/米家/中枢全通道)",
-    "设备设置主题收敛四项(深/浅/薄荷/暖白);实体选择弹窗四主题适配+禁横向滚动",
-    "在线更新源扩为四路(ghfast/gh-proxy/jsdelivr/raw),按安装脚本同款顺序",
-    "投屏页布局修正:侧栏常驻、画面按可视高宽完整显示;设备表表头随主题+滚动固定"
+    "Web 在线检查、下载和安装；签名离线升级",
+    "完整运行依赖、启动校验和失败回退",
+    "修复库路径隔离；保留米家日志与 LCD 颜色修复"
   ]
 }
