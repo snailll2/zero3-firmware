@@ -1,0 +1,80 @@
+[
+  {
+    "test": "proxy_failure_and_bad_html_fallback",
+    "passed": true,
+    "exit_code": 0,
+    "requests": [
+      "/fail/install.sh?t=1794706185",
+      "/bad/install.sh?t=1794706185",
+      "/good/install.sh?t=1794706185",
+      "/fail/release/nx5gui_latest.tar.gz?t=1794706185",
+      "/bad/release/nx5gui_latest.tar.gz?t=1794706185",
+      "/good/release/nx5gui_latest.tar.gz?t=1794706185"
+    ],
+    "actions": "installer:--check"
+  },
+  {
+    "test": "all_sources_failed",
+    "passed": true,
+    "exit_code": 4,
+    "requests": [
+      "/fail/install.sh?t=1794706185",
+      "/fail/install.sh?t=1794706185",
+      "/fail/install.sh?t=1794706185",
+      "/fail/install.sh?t=1794706185"
+    ],
+    "actions": ""
+  },
+  {
+    "test": "all_hashes_bad",
+    "passed": true,
+    "exit_code": 4,
+    "requests": [
+      "/bad/install.sh?t=1794706185",
+      "/bad/install.sh?t=1794706185",
+      "/bad/install.sh?t=1794706185",
+      "/bad/install.sh?t=1794706185"
+    ],
+    "actions": ""
+  },
+  {
+    "test": "installer_check_failure",
+    "passed": true,
+    "exit_code": 7,
+    "requests": [
+      "/good/install.sh?t=1794706185",
+      "/good/release/nx5gui_latest.tar.gz?t=1794706185"
+    ],
+    "actions": "installer:--check"
+  },
+  {
+    "test": "missing_CA_retry_preserves_payload_check",
+    "passed": true,
+    "exit_code": 0,
+    "requests": [
+      "/good/install.sh?t=1794706185",
+      "/good/release/nx5gui_latest.tar.gz?t=1794706185"
+    ],
+    "actions": "installer:--check"
+  },
+  {
+    "test": "install_and_reboot_sequence",
+    "passed": true,
+    "exit_code": 0,
+    "requests": [
+      "/good/install.sh?t=1794706185",
+      "/good/release/nx5gui_latest.tar.gz?t=1794706185"
+    ],
+    "actions": "installer:--check\ninstaller:\nsync\nreboot"
+  },
+  {
+    "test": "latest_release_changes",
+    "passed": true,
+    "exit_code": 0,
+    "requests": [
+      "/good/install.sh?t=1794706185",
+      "/good/release/nx5gui_latest.tar.gz?t=1794706185"
+    ],
+    "actions": "installer:--check"
+  }
+]

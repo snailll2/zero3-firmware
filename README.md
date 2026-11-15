@@ -4,7 +4,7 @@
 
 当前正式版 **2.0.5+20261115-ota2** · 文档更新于 **2026-11-15**。
 
-[下载正式版](https://github.com/snailll2/zero3-firmware/releases/tag/v2.0.5-20261115) · [2.0 使用手册](USAGE.md) · [版本与升级验证](https://github.com/snailll2/zero3-firmware/blob/main/docs/releases/2.0.5.md)
+[下载正式版](https://github.com/snailll2/zero3-firmware/releases/latest) · [2.0 使用手册](USAGE.md) · [版本与升级验证](https://github.com/snailll2/zero3-firmware/blob/main/docs/releases/2.0.5.md)
 
 ## 2.0 能做什么
 
@@ -40,7 +40,7 @@
 
 ## 安装与升级
 
-在 [正式发布页](https://github.com/snailll2/zero3-firmware/releases/tag/v2.0.5-20261115) 根据用途选择文件：
+在 [正式发布页](https://github.com/snailll2/zero3-firmware/releases/latest) 根据用途选择文件：
 
 | 用途 | 文件与步骤 |
 | --- | --- |
@@ -52,82 +52,30 @@
 
 在电脑终端运行 `telnet <面板IP>`，使用该设备的管理员账户登录。部分原厂设备为 `root / 123456`，以实际设备设置为准；这类设备通常没有 SSH，不要将下面的设备命令直接粘贴到电脑终端执行。
 
-登录面板后，**整段复制执行**。沿用原版的代理优先顺序：**ghfast → gh-proxy.org → jsDelivr → GitHub raw**，每个文件独立失败回退。固定 2.0.5 标签并分别校验安装器和完整负载的 SHA256，拒绝代理错误页、空文件或不匹配内容，成功后才安装和重启。
+登录面板后，**整段复制执行**，自动安装当前发布的最新版本。代理与下载检查由引导脚本处理，安装后自动重启，保留已有配置。
 
 ```sh
 (
-set -eu
-CHECK=0
-case "${1:-}" in --check) CHECK=1;; '') ;; *) echo 'Usage: sh bootstrap.sh [--check]'; exit 2;; esac
-DIR=${NX5_BOOTSTRAP_DIR:-/data/zero3-install-2.0.5}
-mkdir -p "$DIR/release"
-cd "$DIR"
 C=''
 for p in /data/nx5_conf/intercom/curl /data/scripts/curl /tmp/curl /usr/bin/curl /bin/curl; do
-    if [ -x "$p" ]; then C=$p; break; fi
+    [ ! -x "$p" ] || { C=$p; break; }
 done
-if [ -z "$C" ]; then
-    command -v wget >/dev/null 2>&1 || { echo 'No curl/wget; use PC offline transfer.'; exit 3; }
-fi
-command -v sha256sum >/dev/null 2>&1 || { echo 'Missing sha256sum; stop.'; exit 3; }
-G=snailll2/zero3-firmware
-TAG=v2.0.5-20261115
-SOURCES="https://ghfast.top/https://raw.githubusercontent.com/$G/$TAG
-https://gh-proxy.org/https://raw.githubusercontent.com/$G/$TAG
-https://cdn.jsdelivr.net/gh/$G@$TAG
-https://raw.githubusercontent.com/$G/$TAG"
-fetch_verified() {
-    rel=$1; dest=$2; expected=$3
-    for base in $SOURCES; do
-        rm -f "$dest.part"
-        echo "[*] Try $base/$rel"
-        if [ -n "$C" ]; then
-            rc=0
-            "$C" -fL --connect-timeout 5 --max-time 120 "$base/$rel" -o "$dest.part" || rc=$?
-            case "$rc" in
-                60|77)
-                    echo '[!] Device CA unavailable; retrying pinned SHA256 download.'
-                    rc=0
-                    "$C" -fkL --connect-timeout 5 --max-time 120 "$base/$rel" -o "$dest.part" || rc=$?
-                    ;;
-            esac
-            if [ "$rc" != 0 ]; then
-                echo '[!] Download failed; trying next source.'; continue
-            fi
-        else
-            if ! wget -T 120 -O "$dest.part" "$base/$rel"; then
-                echo '[!] Download failed; trying next source.'; continue
-            fi
-        fi
-        if [ -s "$dest.part" ] && printf '%s  %s\n' "$expected" "$dest.part" | sha256sum -c -; then
-            mv -f "$dest.part" "$dest"
-            echo "[+] Verified $rel"
-            return 0
-        fi
-        echo '[!] SHA256 mismatch or empty response; trying next source.'
-    done
-    rm -f "$dest.part"
-    echo "[!] All sources failed: $rel. Use PC offline transfer."
-    return 4
-}
-fetch_verified install.sh install.sh 2f0e34aa7accada872bb1003bac10ff030ec5f08cfac970aeac9d17f2a1b8125
-fetch_verified release/nx5gui_latest.tar.gz release/nx5gui_latest.tar.gz 2ad6408823cd03d42d776609a9b302e4ed8de1fc798e95b0bb641ed6f3268761
-sh install.sh --check
-if [ "$CHECK" = 1 ]; then
-    echo '[+] Check complete; no installation or reboot performed.'
-    exit 0
-fi
-sh install.sh
-sync
-reboot
+[ -n "$C" ] || { echo '未找到 curl，请使用下方电脑中转安装。'; exit 1; }
+G=raw.githubusercontent.com/snailll2/zero3-firmware/main
+for B in "https://ghfast.top/https://$G" "https://gh-proxy.org/https://$G" \
+         "https://cdn.jsdelivr.net/gh/snailll2/zero3-firmware@main" "https://$G"; do
+    if "$C" -fkL --connect-timeout 5 --max-time 30 "$B/bootstrap.sh?t=$(date +%s)" -o /tmp/zero3-install.sh && [ -s /tmp/zero3-install.sh ] && sh -n /tmp/zero3-install.sh; then
+        sh /tmp/zero3-install.sh
+        exit $?
+    fi
+done
+exit 1
 )
 ```
 
-验证范围：实机已通过 ghfast 下载本版安装器和完整负载、SHA256 及完整包检查（`--check`，退出码 0）；回退、错误 HTML、摘要错误和 CA 兼容等 6 项受控测试通过。本轮未重装或重启，完整安装沿用 2.0.5 既有实机测试。没有 curl 的新机 wget 分支本轮未实测；无法下载时用电脑中转。 [测试记录](docs/tests/bootstrap-proxy-20261115/README.md)。
+引导自动按 **ghfast → gh-proxy.org → jsDelivr → GitHub** 回退，从 `main` 获取最新安装器及其配套完整包，不固定版本号。负载须匹配安装器内的 SHA256，再做完整包校验；下载失败或文件不匹配会停止。`-k` 用于兼容原厂设备缺少 CA 的环境，不修改系统证书。
 
-只验证下载、代理回退和完整包，不安装或重启：将脚本中的 `CHECK=0` 改成 `CHECK=1`；下载脚本文件的用户可执行 `sh bootstrap.sh --check`。当前下载到的 `install.sh` 使用内置 SHA256 再检查负载，随后逐文件验证完整包。
-
-优先验证 HTTPS 证书；设备缺少 CA 时（curl 60 / 77），仅对这两个固定 SHA256 的文件使用 `-k` 兼容重试，仍须通过摘要校验才执行，不修改系统证书设置。已有便携 curl 优先，没有时尝试系统 wget；不再从第三方 HTTP 地址获取未校验 curl。wget 无法处理 HTTPS 或所有源失败时，使用下方电脑中转。失败会停止，不会继续安装或重启。
+仅下载校验、不安装重启：把上面 `sh /tmp/zero3-install.sh` 改成 `sh /tmp/zero3-install.sh --check`。设备没有 curl 或所有源均不可用时，使用下方电脑中转。
 
 ### 设备无法联网下载：电脑中转完整包
 
@@ -229,7 +177,7 @@ reboot
 若只通过引导安装、目录中没有卸载脚本，可在设备上下载本版脚本后执行：
 
 ```sh
-curl -fL https://raw.githubusercontent.com/snailll2/zero3-firmware/v2.0.5-20261115/uninstall.sh -o /tmp/zero3-uninstall.sh && sh /tmp/zero3-uninstall.sh && reboot
+curl -fL https://raw.githubusercontent.com/snailll2/zero3-firmware/main/uninstall.sh -o /tmp/zero3-uninstall.sh && sh /tmp/zero3-uninstall.sh && reboot
 ```
 
 需要设备有可用的 curl；也可用电脑下载后传入设备。当前卸载脚本仅关闭开机接管，保留账户、网络、布局、程序与备份，重启后恢复原厂启动。旧版 `PURGE=1`、`REBOOT=0` 参数不适用于此版；不要把改名整个 `/data/bin` 当成标准卸载步骤。

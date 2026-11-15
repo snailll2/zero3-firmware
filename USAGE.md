@@ -2,7 +2,7 @@
 
 适用 **2.0 系列**，以 **2.0.5+20261115-ota2** 页面与流程为准。更新日期：2026-11-15。
 
-[功能与主题预览](README.md) · [下载固件](https://github.com/snailll2/zero3-firmware/releases/tag/v2.0.5-20261115)
+[功能与主题预览](README.md) · [下载固件](https://github.com/snailll2/zero3-firmware/releases/latest)
 
 ## 1. 连接面板
 
