@@ -1,13 +1,13 @@
 {
-  "version": "2.0.5+20261115-ota2",
+  "version": "2.0.6+20261115",
   "release_date": "2026-11-15",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 9263054,
-  "md5": "119eeca6b9fba48b622f0eba7b1719a4",
-  "sig": "4f8e5103c52db7627d30273468a22c26f87cdb9d7dbebccfd4ce4ff2e138db80d3bd51323b245e542ca4f1968a50b1909285db981ff28c121476025ec047c109",
+  "size": 9264037,
+  "md5": "5bbfe18e8d0f0c152b98be1ad07f7263",
+  "sig": "829274bd9757d94369f3a09b3a9bb7d814c6853384fa8259bcbc5175d92cb05db51c02c0c1d068dfe9822d08d00f8f88f2b95ba9594b49c5a7eedb24838d7800",
   "notes": [
-    "Web 在线检查、下载和安装；签名离线升级",
-    "完整运行依赖、启动校验和失败回退",
-    "修复库路径隔离；保留米家日志与 LCD 颜色修复"
+    "GitHub 四源代理回退与重定向兼容",
+    "完整在线与签名离线升级、启动校验和失败回退",
+    "包含当前界面、网络和米家修复"
   ]
 }
