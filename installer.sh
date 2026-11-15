@@ -20,16 +20,21 @@ SOURCES="https://ghfast.top/https://raw.githubusercontent.com/$G/$REF
 https://gh-proxy.org/https://raw.githubusercontent.com/$G/$REF
 https://cdn.jsdelivr.net/gh/$G@$REF
 https://raw.githubusercontent.com/$G/$REF"
-# Optional reverse-proxy prefix, e.g. https://proxy.example/https://github... .
-# The prefix is joined to the canonical raw URL, never evaluated as shell code.
-if [ -n "${NX5_GITHUB_PROXY:-}" ]; then
-    case "$NX5_GITHUB_PROXY" in
-        https://*|http://*) ;;
-        *) echo 'NX5_GITHUB_PROXY must start with http:// or https://'; exit 2;;
+# Optional space/newline-separated reverse-proxy prefixes, in priority order.
+# NX5_GITHUB_PROXY remains supported for existing single-proxy users.
+CUSTOM="${NX5_GITHUB_PROXIES:-} ${NX5_GITHUB_PROXY:-}"
+PREFIXES=''
+set -f
+for proxy in $CUSTOM; do
+    case "$proxy" in
+        https://?*|http://?*) ;;
+        *) echo 'GitHub proxies must start with http:// or https://'; exit 2;;
     esac
-    SOURCES="${NX5_GITHUB_PROXY%/}/https://raw.githubusercontent.com/$G/$REF
-$SOURCES"
-fi
+    PREFIXES="$PREFIXES${proxy%/}/https://raw.githubusercontent.com/$G/$REF
+"
+done
+set +f
+SOURCES="$PREFIXES$SOURCES"
 fetch_verified() {
     rel=$1; dest=$2; expected=${3:-}
     for base in $SOURCES; do

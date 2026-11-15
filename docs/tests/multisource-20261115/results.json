@@ -1,0 +1,125 @@
+[
+  {
+    "test": "proxy_failure_and_bad_html_fallback",
+    "passed": true,
+    "exit_code": 0,
+    "requests": [
+      "/fail/install.sh?t=1794721510",
+      "/bad/install.sh?t=1794721510",
+      "/good/install.sh?t=1794721510",
+      "/fail/release/nx5gui_latest.tar.gz?t=1794721510",
+      "/bad/release/nx5gui_latest.tar.gz?t=1794721510",
+      "/good/release/nx5gui_latest.tar.gz?t=1794721510"
+    ],
+    "actions": "installer:--check"
+  },
+  {
+    "test": "all_sources_failed",
+    "passed": true,
+    "exit_code": 4,
+    "requests": [
+      "/fail/install.sh?t=1794721510",
+      "/fail/install.sh?t=1794721510",
+      "/fail/install.sh?t=1794721510",
+      "/fail/install.sh?t=1794721510"
+    ],
+    "actions": ""
+  },
+  {
+    "test": "all_hashes_bad",
+    "passed": true,
+    "exit_code": 4,
+    "requests": [
+      "/bad/install.sh?t=1794721510",
+      "/bad/install.sh?t=1794721510",
+      "/bad/install.sh?t=1794721510",
+      "/bad/install.sh?t=1794721510"
+    ],
+    "actions": ""
+  },
+  {
+    "test": "installer_check_failure",
+    "passed": true,
+    "exit_code": 7,
+    "requests": [
+      "/good/install.sh?t=1794721510",
+      "/good/release/nx5gui_latest.tar.gz?t=1794721510"
+    ],
+    "actions": "installer:--check"
+  },
+  {
+    "test": "missing_CA_retry_preserves_payload_check",
+    "passed": true,
+    "exit_code": 0,
+    "requests": [
+      "/good/install.sh?t=1794721511",
+      "/good/release/nx5gui_latest.tar.gz?t=1794721511"
+    ],
+    "actions": "installer:--check"
+  },
+  {
+    "test": "install_and_reboot_sequence",
+    "passed": true,
+    "exit_code": 0,
+    "requests": [
+      "/good/install.sh?t=1794721511",
+      "/good/release/nx5gui_latest.tar.gz?t=1794721511"
+    ],
+    "actions": "installer:--check\ninstaller:\nsync\nreboot"
+  },
+  {
+    "test": "latest_release_changes",
+    "passed": true,
+    "exit_code": 0,
+    "requests": [
+      "/good/install.sh?t=1794721511",
+      "/good/release/nx5gui_latest.tar.gz?t=1794721511"
+    ],
+    "actions": "installer:--check"
+  },
+  {
+    "test": "custom_proxy_first",
+    "passed": true,
+    "exit_code": 0,
+    "requests": [
+      "/good/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/install.sh?t=1794721511",
+      "/good/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/release/nx5gui_latest.tar.gz?t=1794721511"
+    ],
+    "actions": "installer:--check"
+  },
+  {
+    "test": "invalid_custom_proxy",
+    "passed": true,
+    "exit_code": 2,
+    "requests": [],
+    "actions": ""
+  },
+  {
+    "test": "multiple_custom_proxies",
+    "passed": true,
+    "exit_code": 0,
+    "requests": [
+      "/fail/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/install.sh?t=1794721512",
+      "/bad/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/install.sh?t=1794721512",
+      "/good/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/install.sh?t=1794721512",
+      "/fail/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/release/nx5gui_latest.tar.gz?t=1794721512",
+      "/bad/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/release/nx5gui_latest.tar.gz?t=1794721512",
+      "/good/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/release/nx5gui_latest.tar.gz?t=1794721512"
+    ],
+    "actions": "installer:--check"
+  },
+  {
+    "test": "custom_proxies_then_defaults",
+    "passed": true,
+    "exit_code": 0,
+    "requests": [
+      "/fail/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/install.sh?t=1794721512",
+      "/bad/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/install.sh?t=1794721512",
+      "/good/install.sh?t=1794721512",
+      "/fail/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/release/nx5gui_latest.tar.gz?t=1794721512",
+      "/bad/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/release/nx5gui_latest.tar.gz?t=1794721512",
+      "/good/release/nx5gui_latest.tar.gz?t=1794721512"
+    ],
+    "actions": "installer:--check"
+  }
+]
