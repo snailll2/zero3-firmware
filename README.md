@@ -52,30 +52,13 @@
 
 在电脑终端运行 `telnet <面板IP>`，使用该设备的管理员账户登录。部分原厂设备为 `root / 123456`，以实际设备设置为准；这类设备通常没有 SSH，不要将下面的设备命令直接粘贴到电脑终端执行。
 
-登录面板后，**整段复制执行**，自动安装当前发布的最新版本。代理与下载检查由引导脚本处理，安装后自动重启，保留已有配置。
+登录面板后，只需下载安装脚本并执行，自动安装最新版本：
 
 ```sh
-(
-C=''
-for p in /data/nx5_conf/intercom/curl /data/scripts/curl /tmp/curl /usr/bin/curl /bin/curl; do
-    [ ! -x "$p" ] || { C=$p; break; }
-done
-[ -n "$C" ] || { echo '未找到 curl，请使用下方电脑中转安装。'; exit 1; }
-G=raw.githubusercontent.com/snailll2/zero3-firmware/main
-for B in "https://ghfast.top/https://$G" "https://gh-proxy.org/https://$G" \
-         "https://cdn.jsdelivr.net/gh/snailll2/zero3-firmware@main" "https://$G"; do
-    if "$C" -fkL --connect-timeout 5 --max-time 30 "$B/bootstrap.sh?t=$(date +%s)" -o /tmp/zero3-install.sh && [ -s /tmp/zero3-install.sh ] && sh -n /tmp/zero3-install.sh; then
-        sh /tmp/zero3-install.sh
-        exit $?
-    fi
-done
-exit 1
-)
+curl -fkL https://ghfast.top/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/installer.sh -o /tmp/installer.sh && sh /tmp/installer.sh
 ```
 
-引导自动按 **ghfast → gh-proxy.org → jsDelivr → GitHub** 回退，从 `main` 获取最新安装器及其配套完整包，不固定版本号。负载须匹配安装器内的 SHA256，再做完整包校验；下载失败或文件不匹配会停止。`-k` 用于兼容原厂设备缺少 CA 的环境，不修改系统证书。
-
-仅下载校验、不安装重启：把上面 `sh /tmp/zero3-install.sh` 改成 `sh /tmp/zero3-install.sh --check`。设备没有 curl 或所有源均不可用时，使用下方电脑中转。
+脚本内部自动查找下载工具、切换代理、获取最新完整包、校验、备份、安装并重启，保留已有配置。仅校验不安装时执行 `sh /tmp/installer.sh --check`。初次下载脚本失败时可从仓库下载 `installer.sh` 传入设备执行。
 
 ### 设备无法联网下载：电脑中转完整包
 

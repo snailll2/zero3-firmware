@@ -2,7 +2,7 @@
 # Latest deployment: fetch current installer and its matching full payload.
 set -eu
 CHECK=0
-case "${1:-}" in --check) CHECK=1;; '') ;; *) echo 'Usage: sh bootstrap.sh [--check]'; exit 2;; esac
+case "${1:-}" in --check) CHECK=1;; '') ;; *) echo 'Usage: sh installer.sh [--check]'; exit 2;; esac
 DIR=${NX5_BOOTSTRAP_DIR:-/data/zero3-install}
 mkdir -p "$DIR/release"
 cd "$DIR"
