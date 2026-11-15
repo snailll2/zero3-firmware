@@ -52,38 +52,82 @@
 
 在电脑终端运行 `telnet <面板IP>`，使用该设备的管理员账户登录。部分原厂设备为 `root / 123456`，以实际设备设置为准；这类设备通常没有 SSH，不要将下面的设备命令直接粘贴到电脑终端执行。
 
-登录面板后，**整段复制执行**。脚本查找已有 curl，没有时尝试 wget，从固定的 2.0.5 标签下载安装器及完整负载，校验通过后安装并重启：
+登录面板后，**整段复制执行**。沿用原版的代理优先顺序：**ghfast → gh-proxy.org → jsDelivr → GitHub raw**，每个文件独立失败回退。固定 2.0.5 标签并分别校验安装器和完整负载的 SHA256，拒绝代理错误页、空文件或不匹配内容，成功后才安装和重启。
 
 ```sh
 (
-    set -eu
-    DIR=/data/zero3-install-2.0.5
-    BASE=https://raw.githubusercontent.com/snailll2/zero3-firmware/v2.0.5-20261115
-    mkdir -p "$DIR/release"
-    cd "$DIR"
-    C=''
-    for p in /data/nx5_conf/intercom/curl /data/scripts/curl /tmp/curl /usr/bin/curl /bin/curl; do
-        if [ -x "$p" ]; then C=$p; break; fi
-    done
-    fetch() {
+set -eu
+CHECK=0
+case "${1:-}" in --check) CHECK=1;; '') ;; *) echo 'Usage: sh bootstrap.sh [--check]'; exit 2;; esac
+DIR=${NX5_BOOTSTRAP_DIR:-/data/zero3-install-2.0.5}
+mkdir -p "$DIR/release"
+cd "$DIR"
+C=''
+for p in /data/nx5_conf/intercom/curl /data/scripts/curl /tmp/curl /usr/bin/curl /bin/curl; do
+    if [ -x "$p" ]; then C=$p; break; fi
+done
+if [ -z "$C" ]; then
+    command -v wget >/dev/null 2>&1 || { echo 'No curl/wget; use PC offline transfer.'; exit 3; }
+fi
+command -v sha256sum >/dev/null 2>&1 || { echo 'Missing sha256sum; stop.'; exit 3; }
+G=snailll2/zero3-firmware
+TAG=v2.0.5-20261115
+SOURCES="https://ghfast.top/https://raw.githubusercontent.com/$G/$TAG
+https://gh-proxy.org/https://raw.githubusercontent.com/$G/$TAG
+https://cdn.jsdelivr.net/gh/$G@$TAG
+https://raw.githubusercontent.com/$G/$TAG"
+fetch_verified() {
+    rel=$1; dest=$2; expected=$3
+    for base in $SOURCES; do
+        rm -f "$dest.part"
+        echo "[*] Try $base/$rel"
         if [ -n "$C" ]; then
-            "$C" -fL --connect-timeout 10 --max-time 300 "$1" -o "$2"
+            rc=0
+            "$C" -fL --connect-timeout 5 --max-time 120 "$base/$rel" -o "$dest.part" || rc=$?
+            case "$rc" in
+                60|77)
+                    echo '[!] Device CA unavailable; retrying pinned SHA256 download.'
+                    rc=0
+                    "$C" -fkL --connect-timeout 5 --max-time 120 "$base/$rel" -o "$dest.part" || rc=$?
+                    ;;
+            esac
+            if [ "$rc" != 0 ]; then
+                echo '[!] Download failed; trying next source.'; continue
+            fi
         else
-            wget -O "$2" "$1"
+            if ! wget -T 120 -O "$dest.part" "$base/$rel"; then
+                echo '[!] Download failed; trying next source.'; continue
+            fi
         fi
-    }
-    fetch "$BASE/install.sh" install.sh.part
-    fetch "$BASE/release/nx5gui_latest.tar.gz" release/nx5gui_latest.tar.gz.part
-    mv install.sh.part install.sh
-    mv release/nx5gui_latest.tar.gz.part release/nx5gui_latest.tar.gz
-    sh install.sh --check
-    sh install.sh
-    sync
-    reboot
+        if [ -s "$dest.part" ] && printf '%s  %s\n' "$expected" "$dest.part" | sha256sum -c -; then
+            mv -f "$dest.part" "$dest"
+            echo "[+] Verified $rel"
+            return 0
+        fi
+        echo '[!] SHA256 mismatch or empty response; trying next source.'
+    done
+    rm -f "$dest.part"
+    echo "[!] All sources failed: $rel. Use PC offline transfer."
+    return 4
+}
+fetch_verified install.sh install.sh 2f0e34aa7accada872bb1003bac10ff030ec5f08cfac970aeac9d17f2a1b8125
+fetch_verified release/nx5gui_latest.tar.gz release/nx5gui_latest.tar.gz 2ad6408823cd03d42d776609a9b302e4ed8de1fc798e95b0bb641ed6f3268761
+sh install.sh --check
+if [ "$CHECK" = 1 ]; then
+    echo '[+] Check complete; no installation or reboot performed.'
+    exit 0
+fi
+sh install.sh
+sync
+reboot
 )
 ```
 
-这是固定版本安装入口，避免不同时间下载到不配套的安装器和负载。执行失败时不会运行后面的安装或重启步骤。设备无法访问 GitHub、curl 不可用或 wget 不支持 HTTPS 时，使用下面的局域网传包方式；不要把空文件当成下载成功。仓库旧 `bootstrap.sh` 的历史镜像和热启动说明不作为 2.0 安装依据。
+验证范围：实机已通过 ghfast 下载本版安装器和完整负载、SHA256 及完整包检查（`--check`，退出码 0）；回退、错误 HTML、摘要错误和 CA 兼容等 6 项受控测试通过。本轮未重装或重启，完整安装沿用 2.0.5 既有实机测试。没有 curl 的新机 wget 分支本轮未实测；无法下载时用电脑中转。 [测试记录](docs/tests/bootstrap-proxy-20261115/README.md)。
+
+只验证下载、代理回退和完整包，不安装或重启：将脚本中的 `CHECK=0` 改成 `CHECK=1`；下载脚本文件的用户可执行 `sh bootstrap.sh --check`。当前下载到的 `install.sh` 使用内置 SHA256 再检查负载，随后逐文件验证完整包。
+
+优先验证 HTTPS 证书；设备缺少 CA 时（curl 60 / 77），仅对这两个固定 SHA256 的文件使用 `-k` 兼容重试，仍须通过摘要校验才执行，不修改系统证书设置。已有便携 curl 优先，没有时尝试系统 wget；不再从第三方 HTTP 地址获取未校验 curl。wget 无法处理 HTTPS 或所有源失败时，使用下方电脑中转。失败会停止，不会继续安装或重启。
 
 ### 设备无法联网下载：电脑中转完整包
 

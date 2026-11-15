@@ -1,0 +1,70 @@
+[
+  {
+    "test": "proxy_failure_and_bad_html_fallback",
+    "passed": true,
+    "exit_code": 0,
+    "requests": [
+      "/fail/install.sh",
+      "/bad/install.sh",
+      "/good/install.sh",
+      "/fail/release/nx5gui_latest.tar.gz",
+      "/bad/release/nx5gui_latest.tar.gz",
+      "/good/release/nx5gui_latest.tar.gz"
+    ],
+    "actions": "installer:--check"
+  },
+  {
+    "test": "all_sources_failed",
+    "passed": true,
+    "exit_code": 4,
+    "requests": [
+      "/fail/install.sh",
+      "/fail/install.sh",
+      "/fail/install.sh",
+      "/fail/install.sh"
+    ],
+    "actions": ""
+  },
+  {
+    "test": "all_hashes_bad",
+    "passed": true,
+    "exit_code": 4,
+    "requests": [
+      "/bad/install.sh",
+      "/bad/install.sh",
+      "/bad/install.sh",
+      "/bad/install.sh"
+    ],
+    "actions": ""
+  },
+  {
+    "test": "installer_check_failure",
+    "passed": true,
+    "exit_code": 7,
+    "requests": [
+      "/good/install.sh",
+      "/good/release/nx5gui_latest.tar.gz"
+    ],
+    "actions": "installer:--check"
+  },
+  {
+    "test": "missing_CA_uses_pinned_retry",
+    "passed": true,
+    "exit_code": 0,
+    "requests": [
+      "/good/install.sh",
+      "/good/release/nx5gui_latest.tar.gz"
+    ],
+    "actions": "installer:--check"
+  },
+  {
+    "test": "install_and_reboot_sequence",
+    "passed": true,
+    "exit_code": 0,
+    "requests": [
+      "/good/install.sh",
+      "/good/release/nx5gui_latest.tar.gz"
+    ],
+    "actions": "installer:--check\ninstaller:\nsync\nreboot"
+  }
+]
