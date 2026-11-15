@@ -48,6 +48,74 @@
 | Web 离线升级 | 下载 `zero3-2.0.5.signed.tar.gz`，打开「配置备份与升级」选择文件，校验后执行升级。 |
 | 在线升级 | 支持新升级引擎的设备，在 Web「配置备份与升级」中检查更新 → 下载更新 → 立即升级。 |
 
+### Telnet 一键安装（新机 / 重新部署）
+
+在电脑终端运行 `telnet <面板IP>`，使用该设备的管理员账户登录。部分原厂设备为 `root / 123456`，以实际设备设置为准；这类设备通常没有 SSH，不要将下面的设备命令直接粘贴到电脑终端执行。
+
+登录面板后，**整段复制执行**。脚本查找已有 curl，没有时尝试 wget，从固定的 2.0.5 标签下载安装器及完整负载，校验通过后安装并重启：
+
+```sh
+(
+    set -eu
+    DIR=/data/zero3-install-2.0.5
+    BASE=https://raw.githubusercontent.com/snailll2/zero3-firmware/v2.0.5-20261115
+    mkdir -p "$DIR/release"
+    cd "$DIR"
+    C=''
+    for p in /data/nx5_conf/intercom/curl /data/scripts/curl /tmp/curl /usr/bin/curl /bin/curl; do
+        if [ -x "$p" ]; then C=$p; break; fi
+    done
+    fetch() {
+        if [ -n "$C" ]; then
+            "$C" -fL --connect-timeout 10 --max-time 300 "$1" -o "$2"
+        else
+            wget -O "$2" "$1"
+        fi
+    }
+    fetch "$BASE/install.sh" install.sh.part
+    fetch "$BASE/release/nx5gui_latest.tar.gz" release/nx5gui_latest.tar.gz.part
+    mv install.sh.part install.sh
+    mv release/nx5gui_latest.tar.gz.part release/nx5gui_latest.tar.gz
+    sh install.sh --check
+    sh install.sh
+    sync
+    reboot
+)
+```
+
+这是固定版本安装入口，避免不同时间下载到不配套的安装器和负载。执行失败时不会运行后面的安装或重启步骤。设备无法访问 GitHub、curl 不可用或 wget 不支持 HTTPS 时，使用下面的局域网传包方式；不要把空文件当成下载成功。仓库旧 `bootstrap.sh` 的历史镜像和热启动说明不作为 2.0 安装依据。
+
+### 设备无法联网下载：电脑中转完整包
+
+1. 在电脑下载完整部署 ZIP 并解压，保留 `install.sh` 与 `release/` 的目录关系。
+2. 设备有文件传输工具时，将整个解压目录传到 `/data/zero3-full`。没有 SSH / scp 时，可以用下方局域网 HTTP 方法。
+3. 在电脑进入解压目录，运行：
+
+```sh
+python3 -m http.server 8000 --bind 0.0.0.0
+```
+
+4. 在设备 Telnet 中执行，先把占位 IP 换成电脑的局域网地址：
+
+```sh
+(
+    set -eu
+    PC_IP=192.168.1.10  # 改成电脑的实际局域网 IP
+    mkdir -p /data/zero3-full/release
+    cd /data/zero3-full
+    wget -O install.sh.part "http://$PC_IP:8000/install.sh"
+    wget -O release/nx5gui_latest.tar.gz.part "http://$PC_IP:8000/release/nx5gui_latest.tar.gz"
+    mv install.sh.part install.sh
+    mv release/nx5gui_latest.tar.gz.part release/nx5gui_latest.tar.gz
+    sh install.sh --check
+    sh install.sh
+    sync
+    reboot
+)
+```
+
+两份文件就是完整安装所需的入口和全量负载，启动脚本、规则、依赖与资源已在负载内。电脑中转目录只放公开安装包，完成后在电脑按 `Ctrl+C` 关闭临时服务。
+
 完整部署示例，假设文件传到 `/data/zero3-full`：
 
 ```sh
@@ -63,6 +131,23 @@ reboot
 
 2.0.5 已完成实机在线升级和正式签名包离线重装，配置保留与运行文件核验通过；损坏、错型号和降级包被拒绝。启动失败回退在隔离环境验证，未在实机故意制造断电。
 
+### 版本清单与更新文件
+
+根目录 `version.json` 与 `release/version.json` 供版本检查使用，包含 `version`、`file`、`size`、`md5`、`sig` 和 `notes`。其中 `sig` 是签名字段，不是可省略的说明文字；文件大小、摘要和签名必须与负载配套。`release/nx5gui_latest.tar.gz` 是安装器使用的完整运行负载，`.signed.tar.gz` 是 Web 离线上传使用的签名封装，两者不能互换上传。
+
+```json
+{
+  "version": "2.0.5+20261115-ota2",
+  "file": "release/nx5gui_latest.tar.gz",
+  "size": 9263054,
+  "md5": "119eeca6b9fba48b622f0eba7b1719a4",
+  "sig": "<发布时生成的 Ed25519 签名，示例占位不可用于安装>",
+  "notes": ["版本更新说明"]
+}
+```
+
+普通使用者无需修改清单，更新发布以正式包为准。旧版只核对 MD5 或通过浏览器中转无签名包的步骤不用于 2.0.5 安装。
+
 ## 第一次使用
 
 1. 在面板「设置」中查看 Web 地址，用同一局域网的浏览器打开 `http://<设备IP>:8080/`。
@@ -71,6 +156,39 @@ reboot
 4. 在「实时投屏与触控」核对设备的真实效果；日常也可直接在面板操作。
 
 更详细的主题、场景、Wi-Fi、更新与排错步骤见 [使用手册](USAGE.md)。Web 配置备份不是整机镜像；授权信息和备份请留在可信环境中。
+
+## 设备文件、授权与回原厂
+
+| 路径 | 用途 |
+| --- | --- |
+| `/data/nx5gui` | 设备主程序。 |
+| `/data/nx5vo` | 显示守护，负责启动 GUI，避免重复实例抢占显示。 |
+| `/data/bin/start_app.sh`、`data_app.sh` | 当前开机入口和配套脚本。 |
+| `/data/bin/nx5_env.sh` | 安装时生成的硬件批次环境配置。 |
+| `/data/nx5_conf/intercom/` | HA、米家、布局、显示和授权等用户配置；不要公开整个目录。 |
+| `/data/specs/rules.json` | 米家公共转换规则；型号 spec / 翻译缓存也在此目录。 |
+| `/data/theme/theme_default/` | 主题资源。 |
+| `/data/nx5nss/` | DNS / 文件名解析模块；配套运行库隔离在 `runtime/`，不要拷到系统库目录。 |
+| `/data/nx5_ota/` | 升级暂存、任务结果和启动检查信息。 |
+| `/data/deployment-backups/` | 安装前的运行文件备份。 |
+| `/data/nx5gui_live.log`、`nx5gui_crash.log` | 运行与崩溃排查线索，具体以设备实际生成文件为准。 |
+
+授权按设备机器码验证，在「关于」或 Web 授权区域查看状态并提交匹配的授权凭证。HA / 米家模块未授权或过期时，相关入口或接口可能受限；安装固件不等于自动获得授权，也不要复制另一台设备的授权文件。
+
+回到原厂启动链，可在设备执行完整包内的命令：
+
+```sh
+sh /data/zero3-full/uninstall.sh
+reboot
+```
+
+若只通过引导安装、目录中没有卸载脚本，可在设备上下载本版脚本后执行：
+
+```sh
+curl -fL https://raw.githubusercontent.com/snailll2/zero3-firmware/v2.0.5-20261115/uninstall.sh -o /tmp/zero3-uninstall.sh && sh /tmp/zero3-uninstall.sh && reboot
+```
+
+需要设备有可用的 curl；也可用电脑下载后传入设备。当前卸载脚本仅关闭开机接管，保留账户、网络、布局、程序与备份，重启后恢复原厂启动。旧版 `PURGE=1`、`REBOOT=0` 参数不适用于此版；不要把改名整个 `/data/bin` 当成标准卸载步骤。
 
 ## 当前边界
 
