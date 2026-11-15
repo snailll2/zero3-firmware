@@ -1,145 +1,80 @@
-> 当前正式版：**2.0.5**。包含完整部署包、Web 在线升级和签名离线升级。升级步骤与测试记录见 [2.0.5 发布说明](docs/releases/2.0.5.md)。
+# 零洞 Zero3 UI · 2.0
 
-# Zero3 智能中控 固件发布仓（NX5, 1024x600）
+适用于 **NX5 / Zero3 · 1024 × 600 触屏面板**。基于 LVGL 9.6 与 Linux，将 Home Assistant、米家、可编排桌面、场景和 Web 管理整合到一块屏幕中，日常运行无需连接电脑。
 
-面向 **Zero3 智能中控（NX5, 1024×600 触屏）** 的定制固件：LVGL 9.6 多屏仪表 + Home Assistant 双向联动 + 米家云直连 + 8080 Web 控制台 + 投屏 + 在线更新。
+当前正式版 **2.0.5+20261115-ota2** · 文档更新于 **2026-11-15**。
 
-## 功能特性
+[下载正式版](https://github.com/snailll2/zero3-firmware/releases/tag/v2.0.5-20261115) · [2.0 使用手册](USAGE.md) · [版本与升级验证](https://github.com/snailll2/zero3-firmware/blob/main/docs/releases/2.0.5.md)
 
-**多屏仪表（面板端）**
+## 2.0 能做什么
 
-- LVGL 9.6 多屏主页,卡片拖拽布局(实体/功能/时钟/天气/UDP/Shell 卡),主题与背景自定义
-- 实体磁贴统一四角版式:图标左上、名称左下、控制控件内联(开关/灯亮度色温/窗帘三键/空调温控)
-- 空调卡:大号温度 ± 步进,模式/风速按设备枚举值表动态渲染(中文标签随云端译名,不同机型自适应),室温/模式/风速信息行可点按循环
-- 锁屏三模式(模拟钟表/数字大钟/相册轮播),两级息屏,物理按键 1-4 号可配动作
-- **摄像头卡片**:独立「📹 摄像头」控件(实体卡同款样式),数据源可选 RTSP 直连(支持 Basic/Digest 账号密码,硬解,延迟约 1 秒)或 HA 摄像头(HLS 直播,延迟约 1-2 秒,开机首帧 3.4 秒);图标可上传 PNG 自定义
+| 功能 | 说明 |
+| --- | --- |
+| 多屏桌面 | 独立屏幕名称、图标与网格，拖放卡片到指定位置；保存后应用到设备。 |
+| 实体卡片 | 灯光、开关、空调、窗帘、风扇及传感器等；按实体能力显示电源、滑条、模式与详情控件。 |
+| 场景执行 | 场景卡片可配置多步骤动作与延迟；也可绑定 HA 的场景、脚本或按钮实体。 |
+| 四种主题 | 浅色、深色、暖色、薄荷，适配桌面、状态栏、设置与控件颜色；Web 顶部可直接预览选择。 |
+| Home Assistant | 服务器与令牌配置、实体发现、状态同步及控制，设备列表可筛选并查看属性。 |
+| 米家 | 小米账号授权、设备发现、MIoT 规则转换、云端与本地中枢控制；通道可用性取决于设备能力及授权。 |
+| BLE / Zigbee 代理 | BLE 广播经 MQTT 转发至 HA；Zigbee 串口桥供 HA 侧 ZHA / Zigbee2MQTT 使用。 |
+| 远程操作 | Web 实时投屏与触控、屏幕排版、接入与网络配置、文件管理、配置备份及黑匣子诊断。 |
+| 网络与待机 | Wi-Fi 扫描和连接进度、有线网络配置、亮度、息屏、屏保与触摸唤醒。 |
+| 完整升级 | 设备端更新入口、Web 在线升级及签名离线升级；显示下载、校验、安装、重启和启动检查进度。 |
 
-**Home Assistant 联动**
+卡片控件由实体实际能力决定；未同步或离线时显示对应提示。摄像头支持配置 RTSP / HA 源，兼容性与流畅度取决于视频编码和设备资源。
 
-- REST + WebSocket 双通道:状态轮询与推送同源,控制按域分发,本机实体反向暴露给 HA
-- `/api/ha/entities` 与 HA `/api/states` 格式同构(attributes 按域供数 + device 设备关联),第三方对接零成本
+## 少量页面，看看实际效果
 
-**米家云直连(不经 HA)**
+以下为 **2.0.5 实机 Web 新截图**。四主题截图中嵌入的画面来自设备实时投屏；排版设计器是浏览器预览，示例读数与样式不等于设备当前状态。数量、名称与连接状态仅为拍摄现场样本。
 
-- 与官方 ha_xiaomi_home 集成**实体级 1:1 对齐**:实体集 100% 覆盖、名称一致率 97.8%、eid 官方同构
-- 官方同款转换管线:spec filter/modify 规则引擎、devmap/svcmap 吸收、multiLang 中文译名、显式 dids 二段查询(子设备云名/云改名即时跟进)、.sN 子设备并入父设备
-- spec 缓存按 urn 版本键存储,设备 spec 升级自动刷新;8 域真控制(开关/灯/空调/窗帘/风扇/扫地机/notify/按钮)
+图片以两列缩略图展示，点击可查看原图。
 
-**Web 控制台(8080)**
+<table>
+<tr><th>浅色</th><th>深色</th></tr>
+<tr><td><a href="docs/screenshots/2.0.5/web-light.jpg"><img src="docs/screenshots/2.0.5/web-light.jpg" alt="2.0.5 浅色首页与设备实时画面" width="340"></a></td><td><a href="docs/screenshots/2.0.5/web-dark.jpg"><img src="docs/screenshots/2.0.5/web-dark.jpg" alt="2.0.5 深色首页与设备实时画面" width="340"></a></td></tr>
+<tr><th>暖色</th><th>薄荷</th></tr>
+<tr><td><a href="docs/screenshots/2.0.5/web-warm.jpg"><img src="docs/screenshots/2.0.5/web-warm.jpg" alt="2.0.5 暖色首页与设备实时画面" width="340"></a></td><td><a href="docs/screenshots/2.0.5/web-mint.jpg"><img src="docs/screenshots/2.0.5/web-mint.jpg" alt="2.0.5 薄荷首页与设备实时画面" width="340"></a></td></tr>
+<tr><th>屏幕排版</th><th>在线 / 离线升级</th></tr>
+<tr><td><a href="docs/screenshots/2.0.5/web-layout.jpg"><img src="docs/screenshots/2.0.5/web-layout.jpg" alt="2.0.5 屏幕布局设计器" width="340"></a></td><td><a href="docs/screenshots/2.0.5/web-upgrade.jpg"><img src="docs/screenshots/2.0.5/web-upgrade.jpg" alt="2.0.5 Web 在线与签名离线升级" width="340"></a></td></tr>
+</table>
 
-- 首页排版设计器(拖拽/多屏/背景上传)、智能家居配置(HA/米家/蓝牙/Zigbee 代理)、系统设置
-- **设备管理弹窗**:米家/HA 双入口,来源与类型筛选,设备→实体→attributes 三级查看,本地缓存
-- 实时监视与触控:投屏 JPEG(1024×600 约 40KB/帧,无变化零流量)+ 远程触摸注入
-- **蓝牙 / Zigbee 双网关**:EFR32 芯片一分为二——BLE 扫描代理(MQTT→HA 集成 zero3_bt)+ Zigbee2MQTT 协调器(TCP 串口透传)
-- **摄像头播放器**:RTSP/RTP 解包 + HEVC/H.264 硬件解码(独立伴生进程),共享内存双缓冲送 LVGL;30fps 源实测 28-31fps
+## 安装与升级
 
-**工程化**
+在 [正式发布页](https://github.com/snailll2/zero3-firmware/releases/tag/v2.0.5-20261115) 根据用途选择文件：
 
-- 在线 OTA(分块传输 + md5 强校验 + 浏览器中转兜底)、telnet 一键安装、离线安装
-- GPIO83 外部硬看门狗喂狗、崩溃日志流式落盘(kmsg.log/nx5gui_live.log)、Ed25519 授权验签
+| 用途 | 文件与步骤 |
+| --- | --- |
+| 首次安装 / 完整重新部署 | 下载 `zero3-2.0.5-full-deploy.zip`，在电脑解压，将**整个目录**传入设备，按下方命令安装。 |
+| Web 离线升级 | 下载 `zero3-2.0.5.signed.tar.gz`，打开「配置备份与升级」选择文件，校验后执行升级。 |
+| 在线升级 | 支持新升级引擎的设备，在 Web「配置备份与升级」中检查更新 → 下载更新 → 立即升级。 |
 
-> 本仓库为**发布仓**：只放运行时产物（nx5gui 二进制 / 版本清单 / 安装·卸载脚本）。设备端源码在本地工作区 `aciga_gui`（leelen_intercom_opensrc 移植层）。
-
-## telnet 一键安装（新机/恢复用）
-
-> 设备只有 **telnet**（无 SSH）：`telnet 192.168.50.x`，登录 root / 123456。
-
-telnet 进面板后，**整段粘贴**以下引导脚本执行：
-
-```sh
-cd /tmp
-C=""
-for p in /data/nx5_conf/intercom/curl /data/scripts/curl /tmp/curl /usr/bin/curl; do
-    [ -x "$p" ] && C="$p" && break
-done
-if [ -z "$C" ]; then
-    wget -O curl "http://master.dl.sourceforge.net/project/aqarahub/binutils/curl?viasf=1"
-    chmod +x curl
-    C=./curl
-fi
-G="snailll2/zero3-firmware"
-for h in "ghfast.top/https://raw.githubusercontent.com/$G/main" \
-         "gh-proxy.org/https://raw.githubusercontent.com/$G/main" \
-         "cdn.jsdelivr.net/gh/$G@main" \
-         "raw.githubusercontent.com/$G/main"; do
-    rm -f i.sh
-    echo "[*] try: $h"
-    "$C" -skfL -m 10 "https://$h/install.sh" -o i.sh 2>/dev/null
-    if [ -s i.sh ]; then
-        echo "[*] download success. start installing ..."
-        sh i.sh
-        break
-    fi
-    echo "[!] download failed. try next one ..."
-done
-
-```
-
-
-引导脚本自动完成：查找/获取 curl（优先上次安装持久化的便携 curl）→ 依次尝试 4 个镜像（ghfast → gh-proxy.org → jsdelivr → raw）拉取主安装脚本 → 主脚本再完成 备份用户配置 → 下载 release 包 → 精确替换固件（原厂 GUI 冻结共存不受影响）→ 热启动 → 验证。
-
-> **如果所有镜像都下载失败**（`i.sh` 为空或不存在，脚本无任何输出直接结束）：通常是设备当前网络不通 GitHub 镜像。请检查 WiFi/网线连接后重试；或改用**离线安装**（下方"离线环境"一节）。
-
-**离线环境**（设备不通 GitHub）：PC 从 [Release](https://github.com/snailll2/zero3-firmware/releases/latest) 下载 `nx5gui_latest.tar.gz`，推到设备 `/tmp/`（scp/浏览器均可），重跑上面引导脚本会自动检测本地包跳过下载。
-
-## 使用说明
-
-装好之后的**面板端操作与 Web 端全部配置**——屏幕编辑器逐项参数、智能家居页(HA 连接 / 米家账号 / 蓝牙 / Zigbee 网关)、设备管理弹窗、对接 API、投屏、常见问题——见 **[USAGE.md](USAGE.md)**。
-
-## 在线更新（设备 Web 控制台）
-
-Web 控制台 → **设置 → 固件更新**：
-
-1. **检测更新**：设备优先直连 GitHub；不可用时自动走 **浏览器中转**（电脑拉取后分块传给设备）
-2. **下载**：分块传输 + md5 强校验
-3. **安装**：全量 tar 更新（二进制+脚本+主题）→ md5 强校验 → 自动重启生效
-
-## 设备端文件清单
-
-| 路径 | 说明 |
-|---|---|
-| `/data/nx5gui` | GUI 二进制（定名，不借用原厂 aciga_lvgl，避开 guardian 的 killall 连坐） |
-| `/data/bin/start_app.sh` | **开机接管脚本**（Sinit 钩子自动执行，见上节时序） |
-| `/data/bin/data_app.sh` | 哑文件（Sinit 只检查它存在，真正执行的是 start_app.sh） |
-| `/data/bin/nx5_env.sh` | 批次环境变量（install.sh 生成，可手工编辑后重启生效） |
-| `/data/productionTest` | **直启分叉标志**（空文件；存在=原厂走产测分支，原厂 GUI 永不启动） |
-| `/data/nand-1` | **直启分叉标志**（空目录；与上文件配合） |
-| `/data/nx5gui_live.log` | GUI 运行日志（追加式，跨重启保留；排查死亡现场看这里） |
-| `/data/nx5_conf/intercom/` | 用户配置：app/ha/home_layout/license .json + 便携 curl（OTA 直连用） |
-| `/data/theme/theme_default/` | 主题资源（379 文件，Web 编辑器同源） |
-| `/tmp/nx5gui.lock` | 单实例 flock 锁（重启自动清） |
-
-调试开关（touch 生成、rm 移除）：`/data/keeper_off` 临时停冻结巡检；`/data/nx5_render_pause` 暂停渲染（喂狗/Web 照常）。
-
-环境变量开关（写在 nx5_env.sh 或启动前 export）：`NX5_GPIO83FEED` GPIO83 外部狗喂狗；`NX5_NOWDT` 不开软件看门狗；`NX5_NOFREEZE` 不冻结原厂（调试用，面板会双写）；`NX5_BL_BROKER` 背光走 broker 通道（默认关=内建 sysfs PWM 真息屏）；`NX5_BL_KEEPALIVE` 背光服务保活脉冲（默认关）。
-
-## 版本清单格式（version.json，设备 OTA 检查用）
-
-```json
-{
-  "version": "1.0.186+20261031",
-  "file": "nx5gui",
-  "size": 3434845,
-  "md5": "…",
-  "notes": ["更新说明1", "更新说明2"]
-}
-```
-
-## 卸载 / 回退
-
-**标准卸载(推荐,1.0.131 起)** —— 设备 telnet 一行:
+完整部署示例，假设文件传到 `/data/zero3-full`：
 
 ```sh
-curl -skfL -o /tmp/uninstall.sh https://ghfast.top/https://raw.githubusercontent.com/snailll2/zero3-firmware/main/uninstall.sh && sh /tmp/uninstall.sh
+cd /data/zero3-full
+sh install.sh --check
+sh install.sh
+reboot
 ```
 
-- 默认:停 GUI + 摘开机链 + **移除直启分叉文件(productionTest/nand-1,恢复原厂启动链)** + 清调试残留,**保留用户配置/授权/主题**,最后重启回出厂
-- `PURGE=1 sh /tmp/uninstall.sh`:连同 nx5_conf(HA 配置+授权!)、主题、备份彻底清除
-- `REBOOT=0 sh /tmp/uninstall.sh`:只清理不重启(面板立即回原厂画面)
-- 安全顺序:先解冻原厂再停 nx5gui(新批次设备外部看门狗需要原厂接管喂狗)
+完整包包含主程序、启动脚本、显示与视频守护、运行依赖、网络工具、公共 `rules.json`、主题和卡片资源。它是应用层完整部署包，需要原厂 Linux 系统仍完整，不包含引导器、内核或分区镜像。旧版尚无新升级接口时，先用完整包迁移。
 
-手工应急回退:`mv /data/bin /data/bin.off && reboot`(仅摘开机链,文件保留)
+升级保留已有账户、网络、布局、场景和自定义配置。在线与离线共用完整安装流程，检查签名、型号、版本和完整性；启动检查失败时恢复上一套运行文件。升级期间保持供电，等待设备重启后的最终结果。
 
-## 授权
+2.0.5 已完成实机在线升级和正式签名包离线重装，配置保留与运行文件核验通过；损坏、错型号和降级包被拒绝。启动失败回退在隔离环境验证，未在实机故意制造断电。
 
-固件内置 Ed25519 公钥验签：设置页显示机器码，凭厂商签发的授权凭证激活；未激活时 HA 配置与部分功能锁定（详见 Web 设置页授权卡片）。
+## 第一次使用
+
+1. 在面板「设置」中查看 Web 地址，用同一局域网的浏览器打开 `http://<设备IP>:8080/`。
+2. 在「智能家居集成」配置 HA 地址和长期令牌，或完成小米账号授权。
+3. 在「设备与实体管理」核对来源、类型和属性，再到「首页与屏幕排版」添加卡片、选择实体并保存。
+4. 在「实时投屏与触控」核对设备的真实效果；日常也可直接在面板操作。
+
+更详细的主题、场景、Wi-Fi、更新与排错步骤见 [使用手册](USAGE.md)。Web 配置备份不是整机镜像；授权信息和备份请留在可信环境中。
+
+## 当前边界
+
+- 动态卡片设计器为 **Beta**；天气实时数据、部分高级领域和禁用的配置项以页面提示为准。
+- 本地米家控制需要可用的中枢、证书与设备授权；发现网关 IP 不代表所有米家设备都支持本地控制。
+- BLE 转发不等于任意 GATT 控制；Zigbee 配网与设备管理由 HA 侧完成。
+- 不承诺所有布局、摄像头或设备组合稳定达到 30 FPS；预览画布不替代真机验证。
