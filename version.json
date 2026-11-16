@@ -2,13 +2,13 @@
   "version": "2.0.9+20261116",
   "release_date": "2026-11-16",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 6727736,
-  "md5": "cd2da406b777ed342d1ec632d42f194e",
-  "sig": "e6bc752ca655acd6d9e47a3bf664797446f9a7eab82e9ea2c73b57e656ad205c7f20848f3360e5f5a6068a0ba57beec3f893951c0a21708cdaee09318eca510d",
+  "size": 6728022,
+  "md5": "63f22efb5588fa5763c93136f1aa9a2f",
+  "sig": "e0bad663731be20be8cd0921fc2b06e6bc9d9bdd473a04552ff3ec75b03a319dbe45d2a0a107f47dd38c76a8b09005d9bf0e2029d5595c037713711184167e0a",
   "notes": [
-    "状态栏五项传感器 en 门控真机生效,启停 60s 内跟随(免重启);chip 左对齐连续排布",
+    "状态栏五项传感器 en 门控真机生效,启停 60s 内跟随(免重启);chip 左对齐连续排布;单位按传感器自身 unit_of_measurement 拼接",
     "动态卡片设计器三栏视口化修复,卡片尺寸放大弃 transform 栅格化截断",
-    "studio 标题恢复(卡片动态布局设计器 Beta),工具栏六按钮单行,说明改为暂未正式启用",
-    "网页状态栏编辑器↔设备 /api/statusbar 双向同步(编辑列表映射五槽位,回读校验)"
+    "头部米家连接状态修复(状态 JSON 缓冲扩容,不再恒灰)",
+    "网页状态栏编辑器↔设备 /api/statusbar 双向同步;实体选择抽屉全池展示"
   ]
 }
