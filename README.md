@@ -4,9 +4,9 @@
 
 适用于 **NX5 / Zero3 · 1024 × 600 触屏面板**。基于 LVGL 9.6 与 Linux，将 Home Assistant、米家、可编排桌面、场景和 Web 管理整合到一块屏幕中，日常运行无需连接电脑。
 
-当前正式版 **2.0.27** · 更新说明见 [本版记录](docs/releases/2.0.27.md)。
+当前正式版 **2.0.28** · 更新说明见 [本版记录](docs/releases/2.0.28.md)。
 
-[下载正式版](https://github.com/snailll2/zero3-firmware/releases/latest) · [2.0 使用手册](USAGE.md) · [版本与升级验证](https://github.com/snailll2/zero3-firmware/blob/main/docs/releases/2.0.27.md)
+[下载正式版](https://github.com/snailll2/zero3-firmware/releases/latest) · [2.0 使用手册](USAGE.md) · [版本与升级验证](https://github.com/snailll2/zero3-firmware/blob/main/docs/releases/2.0.28.md)
 
 ## 2.0 能做什么
 
@@ -46,8 +46,8 @@
 
 | 用途 | 文件与步骤 |
 | --- | --- |
-| 首次安装 / 完整重新部署 | 下载 `zero3-2.0.27-full-deploy.zip`，在电脑解压，将**整个目录**传入设备，按下方命令安装。 |
-| Web 离线升级 | 下载 `zero3-2.0.27.signed.tar.gz`，打开「配置备份与升级」选择文件，校验后执行升级。 |
+| 首次安装 / 完整重新部署 | 下载 `zero3-2.0.28-full-deploy.zip`，在电脑解压，将**整个目录**传入设备，按下方命令安装。 |
+| Web 离线升级 | 下载 `zero3-2.0.28.signed.tar.gz`，打开「配置备份与升级」选择文件，校验后执行升级。 |
 | 在线升级 | 支持新升级引擎的设备，在 Web「配置备份与升级」中检查更新 → 下载更新 → 立即升级。 |
 
 ### Telnet 一键安装（新机 / 重新部署）
@@ -127,13 +127,13 @@ reboot
 
 ```json
 {
-  "version": "2.0.27",
+  "version": "2.0.28",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 10201836,
-  "md5": "75df68a787eb61b60139384986f9790a",
+  "size": 10204690,
+  "md5": "8ba7866f9d62fdaca2106b4f8d3cce2c",
   "sig": "<发布时生成的 Ed25519 签名，示例占位不可用于安装>",
   "notes": [
-    "卡片设计语言统一(cmd/摄像头/媒体图标与字号对齐实体卡,主题切换实时跟随),空调卡两列模式风速+关机温度,媒体卡状态中文大字,布局保存唯一 id 校验"
+    "屏保照片上传修复(HTTP 体积上限 512KB→8MB,照片级 PNG 可上传);状态栏保存报错带具体字段名;设计器写入前自动清洗超长名称"
   ]
 }
 ```

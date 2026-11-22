@@ -1,11 +1,11 @@
 {
-  "version": "2.0.27",
+  "version": "2.0.28",
   "release_date": "2026-11-22",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 10201836,
-  "md5": "75df68a787eb61b60139384986f9790a",
-  "sig": "c4d41dd9a89d0f5ec75816825c7eb76c4056e3cd554489fa2f14c68a04e5a5bc1cda79240e8abbf1e12d6f0988f021a8303351c87abe03292542d40d3db1460b",
+  "size": 10204690,
+  "md5": "8ba7866f9d62fdaca2106b4f8d3cce2c",
+  "sig": "13a6ba5fb2dd7b71304cdefaacbbb8a73284b5586529df63dc6d3eec29b3adfa47c4325e2694b97ec452cfe6803cb898157b109d0d1890c3ace5d4af5a11b50f",
   "notes": [
-    "卡片设计语言统一(cmd/摄像头/媒体图标与字号对齐实体卡,主题切换实时跟随),空调卡两列模式风速+关机温度,媒体卡状态中文大字,布局保存唯一 id 校验"
+    "屏保照片上传修复(HTTP 体积上限 512KB→8MB,照片级 PNG 可上传);状态栏保存报错带具体字段名;设计器写入前自动清洗超长名称"
   ]
 }
