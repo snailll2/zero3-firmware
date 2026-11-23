@@ -5,7 +5,7 @@ set -eu
 umask 077
 BASE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ARCHIVE="$BASE/release/nx5gui_latest.tar.gz"
-EXPECTED_SHA256='92f1b4811827d0b9aafa2b72d19076506bfd5e2619b2b2ea0137c71b53e76047'
+EXPECTED_SHA256='5e07fd8790ae416a6d9ab0e1edddeef331d3ed080d2dd2f918422ff04a9b2bc3'
 ROOT=/data
 CHECK=0
 TEST_ROOT=0
