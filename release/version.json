@@ -1,14 +1,14 @@
 {
-  "version": "2.0.32+20261123",
+  "version": "2.0.33+20261123",
   "release_date": "2026-11-23",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 10242066,
-  "md5": "f371f23c906467476bb41fdea9f7fcf9",
-  "sig": "750e9fca75edb1bc699b32cdd1f4e85190b98ee57a592f69e3dde8b325aba4b86a34b5c456b47e39eb68158a2134e2f6ca1769c858ea3465e158abc150696b08",
+  "size": 10243248,
+  "md5": "bb9524973f137a079abef1616e51cfe0",
+  "sig": "530cd0a5980960b10aeba2b33ee6300ac5ee0db6a4028684b4d7bcda2d1fe4e964cbd3c952cb747119dddc405d394ff084a818b459fff8aac92f290b4e6f6d05",
   "notes": [
-    "卡片背景图全卡型支持+严格圆角裁剪",
-    "离线实体显示「设备离线」+控件置灰+能力缓存",
-    "天气图标裁切修复（云朵完整）",
-    "OTA 自动检查改为每日 10:00（去掉轮询）"
+    "升级前自动回收空间（清理历史备份）",
+    "旧网页备份仅留最新、冗余 nx5gui.bak 全清",
+    "仍不足再清理历史 deployment-backups",
+    "修复 /data 空间不足导致升级失败"
   ]
 }
