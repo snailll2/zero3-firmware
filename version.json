@@ -1,14 +1,14 @@
 {
-  "version": "2.0.38",
+  "version": "2.0.39",
   "release_date": "2026-11-24",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 10253683,
-  "md5": "eb2afb54634e81c3774e511de250fddc",
-  "sig": "9f5f0feb39bb2c171fa44ca1e91dce9d9571f33b7e09942308612e641d36f5ded04b07f1f22baea9b4f679874c520ef300d4c1234828d1e802a5c3daee510b07",
+  "size": 10254138,
+  "md5": "0f313a1aeeeedfe0a873aec8e1fd59d2",
+  "sig": "22fd11b62ceb86ca7afa1ce26d24073d2a39d9554789a65ddbb320b9787865cdeb96d83845a3befd7ea56ef7a26535479be348a06919ba7dcf31363879109f06",
   "notes": [
+    "详情弹窗移除电源行/已关闭周围边框",
+    "返回键改 30px SVG 矢量，不再模糊",
     "投屏页移动端撑满可用高度",
-    "去掉 .page 底部 96px 留白",
-    "预览不再被高度约束缩窄",
-    "其余能力沿用 2.0.37"
+    "其余沿用 2.0.38"
   ]
 }
