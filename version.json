@@ -1,14 +1,12 @@
 {
-  "version": "2.0.43+20261125-perf-crashfix",
+  "version": "2.0.44+20261125-tmpfs-oomfix",
   "release_date": "2026-11-25",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 12356567,
-  "md5": "46e2539740b0394435ad287c6e8831c8",
-  "sig": "a696c4081a4ce04a3e9b8a5537d6543748118d6fa9110295ad9eeeed6543d45b4b36167fc08473381b78a3b1cb5bcdeb9ceb102e2baff64a1bf6fd203bc0fc0f",
+  "size": 12356618,
+  "md5": "18d88fc962c34500b7241d852116c7f3",
+  "sig": "a96f18cdd5b873998f97138c59e52113ca720c6aef3e1c8a958efc2d77093a62a926a32a7891c60a9bb0b92ecf168e4a7ea0d9935a3ea22aba21e50d1bea2201",
   "notes": [
-    "分时段屏幕亮度（按时间段自动接管背光）",
-    "修复实体状态更新导致整片卡片区重绘（弱机 1-2s 卡顿）",
-    "修复点对讲卡必崩并引发整机复位",
-    "断网自动恢复提速（140s→约 40s）"
+    "修复 sipservice 日志灌满 tmpfs 导致内核 OOM 杀 GUI、面板反复\"崩溃\"",
+    "sipservice 输出改为丢弃，启动前截断超大临时日志"
   ]
 }
