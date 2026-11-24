@@ -1,0 +1,14 @@
+{
+  "version": "2.0.42",
+  "status": "passed",
+  "checks": [
+    "ARM executable version and package signature",
+    "OTA host regressions (5)",
+    "proxy bootstrap fixtures (11)",
+    "storage guard protection",
+    "post-boot health and rollback",
+    "full installer fresh/reinstall/corruption/copy fallback/low-space/failed restoration"
+  ],
+  "device_install_tested": false,
+  "note": "Isolated tests passed; no device flashing/reboot in this release pipeline."
+}
