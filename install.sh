@@ -5,7 +5,7 @@ set -eu
 umask 077
 BASE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ARCHIVE="$BASE/release/nx5gui_latest.tar.gz"
-EXPECTED_SHA256='30e068b27f1cd0cb073e5c111def166e246d3003b4ac17da8df13de8a2442066'
+EXPECTED_SHA256='57548ea3d6cbe23239094d9d7e89a8380157b78d85b6c3158a17548ae38105bd'
 ROOT=/data
 CHECK=0
 TEST_ROOT=0
@@ -60,6 +60,10 @@ rollback() {
     while IFS= read -r rel; do
         rm -f "$ROOT/$rel.installing" "$ROOT/$rel.rollback"
         if [ -f "$BACK/files/$rel" ]; then
+            # A failed commit may leave the original target inode untouched.
+            # GNU mv rejects moving another hardlink onto that same inode;
+            # no restoration is needed in this case.
+            if [ "$BACK/files/$rel" -ef "$ROOT/$rel" ]; then continue; fi
             if [ "$LINK_MODE" = link ]; then
                 ln "$BACK/files/$rel" "$ROOT/$rel.rollback" || { restored=0;continue; }
             else
