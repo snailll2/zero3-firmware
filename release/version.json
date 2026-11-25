@@ -1,12 +1,12 @@
 {
-  "version": "2.0.48+20261125-logquiet",
+  "version": "2.0.49+20261125-logtrim",
   "release_date": "2026-11-25",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 12654653,
-  "md5": "8f8d02997f534e19b66d309756ee22fa",
-  "sig": "7831392c606da016e84cf9080c8455d54850bc0682a8f07736e46ba699c0ea439704b7a59b66a086ae39acd29bdbf794e5422753a5013b1085e5fd72ab1c0b00",
+  "size": 12717667,
+  "md5": "e26d5ec5581a0359dcc3b1f68b5b92bf",
+  "sig": "4342e3e975d3628fde23751a69893b1d8c5ccdfcbaeb1fdb411ec5e6d7254063275f119d4d19c7574766881a01d9c9eba443e739f24c1d583b5857afde5fb008",
   "notes": [
-    "统一日志默认抑制高频 DEBUG（轮询/解析细节不再淹没内存环）",
-    "查询响应新增 suppressed 计数"
+    "大幅削减日志量：实体/选择项/米家逐包细节不再写 stdout（空闲时日志零增长）",
+    "高频细节只进内存环 DEBUG，默认不占环"
   ]
 }
