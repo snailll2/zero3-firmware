@@ -1,12 +1,12 @@
 {
-  "version": "2.0.44+20261125-tmpfs-oomfix",
+  "version": "2.0.45+20261125-ha-reconnect",
   "release_date": "2026-11-25",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 12356618,
-  "md5": "18d88fc962c34500b7241d852116c7f3",
-  "sig": "a96f18cdd5b873998f97138c59e52113ca720c6aef3e1c8a958efc2d77093a62a926a32a7891c60a9bb0b92ecf168e4a7ea0d9935a3ea22aba21e50d1bea2201",
+  "size": 12357962,
+  "md5": "d7d1c0233477396066f8253b73a98ab7",
+  "sig": "880d61f35b32c4389d708875884a90c1bd681d0f5c6cebfe585c5c38b7ff132d638be93d28dbb1057d8c0d92e8f80ec6f3152f6fb0b28fe1b9672adf15a6720d",
   "notes": [
-    "修复 sipservice 日志灌满 tmpfs 导致内核 OOM 杀 GUI、面板反复\"崩溃\"",
-    "sipservice 输出改为丢弃，启动前截断超大临时日志"
+    "修复 HA 断链时 100ms 无退避重连（实体池掉到 38/552、整机卡顿）",
+    "HA 链路看护改按内容判成败，不再误把正常链路 down/up"
   ]
 }
