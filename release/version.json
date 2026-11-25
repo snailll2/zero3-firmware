@@ -1,13 +1,12 @@
 {
-  "version": "2.0.47+20261125-logp2",
+  "version": "2.0.48+20261125-logquiet",
   "release_date": "2026-11-25",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 12654732,
-  "md5": "2f10c73a3e0a56aa92a6cbc5c1fb75eb",
-  "sig": "cbf8672b83176bcf4a648d690e0c382949deae19bb3723c27b18f543cbe9eaf00214a72d2072c11f5a2916a1e7aa9710d074b70260a492750cf935a440f2d10d",
+  "size": 12654653,
+  "md5": "8f8d02997f534e19b66d309756ee22fa",
+  "sig": "7831392c606da016e84cf9080c8455d54850bc0682a8f07736e46ba699c0ea439704b7a59b66a086ae39acd29bdbf794e5422753a5013b1085e5fd72ab1c0b00",
   "notes": [
-    "P2 生产者迁移：按键/Wi-Fi/自动化审计改走统一日志（不再直写散落文件）",
-    "蓝牙/Zigbee/HA 看护输出由采集器接管",
-    "按键热路径不再每条刷写 flash"
+    "统一日志默认抑制高频 DEBUG（轮询/解析细节不再淹没内存环）",
+    "查询响应新增 suppressed 计数"
   ]
 }
