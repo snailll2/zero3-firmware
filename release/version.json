@@ -1,12 +1,12 @@
 {
-  "version": "2.0.49+20261125-logtrim",
+  "version": "2.0.50+20261125-logweb",
   "release_date": "2026-11-25",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 12717667,
-  "md5": "e26d5ec5581a0359dcc3b1f68b5b92bf",
-  "sig": "4342e3e975d3628fde23751a69893b1d8c5ccdfcbaeb1fdb411ec5e6d7254063275f119d4d19c7574766881a01d9c9eba443e739f24c1d583b5857afde5fb008",
+  "size": 12721027,
+  "md5": "f2d1093315d1c2eb65c6cc1de7d21baa",
+  "sig": "fad7db10a9625beb61d71e113e710f4a71880369141067d9e4b147716fe43833708afcd06bc45a8d575306d20e9e704c926e4a226011ee50444f6485e5e37b05",
   "notes": [
-    "大幅削减日志量：实体/选择项/米家逐包细节不再写 stdout（空闲时日志零增长）",
-    "高频细节只进内存环 DEBUG，默认不占环"
+    "Web 可配日志级别与临时调试（10 分钟自动关闭）",
+    "一键清理全部日志（活动/遗留/历史目录/厂商），清理前可看清单、清理后返回释放清单"
   ]
 }
