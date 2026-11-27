@@ -5,7 +5,7 @@ set -eu
 umask 077
 BASE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ARCHIVE="$BASE/release/nx5gui_latest.tar.gz"
-EXPECTED_SHA256='b778828b6499a1a50511fe8158ad77f08704b3e623700b6c645abb3ac87a2fdf'
+EXPECTED_SHA256='12cee5813381e64ba5476a8e10a342de0484127dee162d92eca6f3944754c901'
 ROOT=/data
 CHECK=0
 TEST_ROOT=0
@@ -96,7 +96,7 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 (umask 022; tar -xzf "$ARCHIVE" -C "$WORK")
 (cd "$WORK" && sha256sum -c DEPLOY-SHA256SUMS >/dev/null)
-for f in nx5gui nx5vo nx5_vdec_helper start_app.sh data_app.sh uninstall.sh \
+for f in nx5gui nx5vo nx5_vdec_helper start_app.sh data_app.sh uninstall.sh bin/nx5blpub \
  nx5_conf/intercom/mijia_ca.cert nx5_conf/intercom/mijia_cloud_ca.crt \
  nx5_conf/intercom/curl nx5nss/libnss_dns.so.2 nx5nss/libnss_files.so.2 nx5nss/runtime/libc.so.6 \
  nx5nss/runtime/libresolv.so.2 nx5nss/runtime/ld-linux.so.3 specs/rules.json nx5_conf/intercom/web/index.html; do
