@@ -1,14 +1,14 @@
 {
-  "version": "2.0.53+20261127",
-  "release_date": "2026-11-27",
+  "version": "2.0.55+20261127",
+  "release_date": "2026-11-28",
   "file": "release/nx5gui_latest.tar.gz",
-  "size": 12319513,
-  "md5": "4902db60619d43bd57b1a10a4a1e5231",
-  "sig": "d2f8d888877440860bc8fa2e6b79172a4ace7449e5c207bfad107afbc14594cb475e6cb7d7249561b1a3bf833e92bd2489bfebe75e49c809dec7f08993a4fc0a",
+  "size": 12350062,
+  "md5": "7dcc83671fbb5f7c5cf2857caf802e78",
+  "sig": "0beb1c8e0bcfc986be6ceb9e686b8984708c2fa602cc78b11ccf2659d34ffb7736f63f0304e699f68df573f88862b35f9fde30a854f3465b993255bde4a89000",
   "notes": [
-    "开机画面不再中断：Logo 消失后约 1 秒直接进首页，中间只有短暂黑屏",
-    "开机首页直接以你的主题显示，不再先深色再刷成浅色",
-    "首页更快出来：背光点亮后约 0.5~0.7 秒显示首页",
-    "实体上限 4096→8192，内存按需占用"
+    "修复米家设备多时云端列表聚合超过 512KB 导致同步反复失败（aggregate_capacity/-23）",
+    "修复米家设备名响应超过 64KB 导致 names=0",
+    "修复传感器卡片读数不显示单位（°C/%/μg/m³ 等随实体 unit_of_measurement 显示）",
+    "修复「分时段亮度」首次打开报“设备响应不是有效 JSON”"
   ]
 }
